@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1280" />
+<title>UnitBuild — 그룹 C. BIM 자동화</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+/* ── 디자인 토큰 ─────────────────────────────── */
+:root {
+  --navy:   #0a1628;
+  --blue:   #1a56db;
+  --blue2:  #3b82f6;
+  --teal:   #0ea5e9;
+  --green:  #10b981;
+  --orange: #f97316;
+  --purple: #8b5cf6;
+  --pink:   #ec4899;
+  --amber:  #f59e0b;
+  --red:    #ef4444;
+  --g50:    #f8fafc;
+  --g100:   #f1f5f9;
+  --g200:   #e2e8f0;
+  --g400:   #94a3b8;
+  --g600:   #475569;
+  --g900:   #0f172a;
+  --r:      14px;
+  --rx:     20px;
+  --sh:     0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --shh:    0 8px 30px rgba(26,86,219,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,-apple-system,sans-serif;background:var(--g50);color:var(--g900);-webkit-font-smoothing:antialiased}
+
+/* ── 탭 네비 ─────────────────────────────────── */
+.topbar{background:#fff;border-bottom:1px solid var(--g200);height:60px;display:flex;align-items:center;padding:0 32px;gap:8px;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:center;gap:8px;margin-right:24px}
+.logo-icon{width:34px;height:34px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.logo-text{font-weight:900;font-size:16px;color:var(--g900)}
+.logo-sub{font-size:10px;color:var(--g400)}
+.tab-btn{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--g600);transition:.15s;white-space:nowrap}
+.tab-btn:hover{background:var(--g100);color:var(--g900)}
+.tab-btn.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,.25)}
+.group-badge{margin-left:auto;padding:4px 14px;background:rgba(26,86,219,.08);color:var(--blue);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em}
+
+/* ── 화면 캔버스 ─────────────────────────────── */
+.screen{display:none;width:1280px;min-height:800px;padding:28px 32px 32px}
+.screen.active{display:block}
+
+/* ── 공통 카드 ──────────────────────────────── */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:20px;border:1px solid var(--g200)}
+.card-sm{background:#fff;border-radius:10px;box-shadow:var(--sh);padding:14px 16px;border:1px solid var(--g200)}
+.section-tag{display:inline-block;padding:3px 10px;background:rgba(26,86,219,.08);color:var(--blue);border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── 스크린 헤더 ────────────────────────────── */
+.screen-header{margin-bottom:22px}
+.screen-num{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.screen-title{font-size:22px;font-weight:900;color:var(--g900);line-height:1.25}
+.screen-desc{font-size:13px;color:var(--g400);margin-top:4px}
+
+/* ── 메시지 배너 ─────────────────────────────── */
+.msg-banner{margin-top:20px;background:linear-gradient(135deg,var(--navy) 0%,#0f2c5a 60%,#1a3a7a 100%);border-radius:12px;padding:14px 22px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.msg-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 50%,rgba(26,86,219,.3) 0%,transparent 60%),linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:auto,40px 40px,40px 40px}
+.msg-arrow{font-size:20px;background:rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;color:#fff;font-weight:900;white-space:nowrap;position:relative;z-index:1}
+.msg-text{color:rgba(255,255,255,.95);font-size:13px;font-weight:600;line-height:1.5;position:relative;z-index:1}
+.msg-label{font-size:10px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:2px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ── 점수 바 ─────────────────────────────────── */
+.score-bar{height:7px;border-radius:4px;background:var(--g200);overflow:hidden;margin-top:5px}
+.score-fill{height:100%;border-radius:4px;transition:width .6s}
+
+/* ── 그리드 헬퍼 ─────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.col-span-2{grid-column:span 2}
+
+/* ── 태그 칩 ─────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.chip-blue{background:rgba(26,86,219,.1);color:#1d4ed8}
+.chip-blue2{background:rgba(59,130,246,.1);color:#1d4ed8}
+.chip-green{background:rgba(16,185,129,.1);color:#047857}
+.chip-amber{background:rgba(245,158,11,.1);color:#b45309}
+.chip-red{background:rgba(239,68,68,.1);color:#b91c1c}
+.chip-purple{background:rgba(139,92,246,.1);color:#6d28d9}
+.chip-teal{background:rgba(14,165,233,.1);color:#0369a1}
+.chip-orange{background:rgba(249,115,22,.1);color:#c2410c}
+.chip-gray{background:var(--g100);color:var(--g600)}
+
+/* ── 리스트 아이템 ──────────────────────────── */
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--g100)}
+.list-row:last-child{border-bottom:none}
+.list-key{font-size:12px;color:var(--g600)}
+.list-val{font-size:12px;font-weight:700;color:var(--g900)}
+
+/* ── 등급 배지 ──────────────────────────────── */
+.grade{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-weight:900;font-size:14px}
+.grade-A{background:#dcfce7;color:#15803d;border:2px solid #15803d}
+.grade-B{background:#dbeafe;color:#1d4ed8;border:2px solid #1d4ed8}
+.grade-C{background:#fef9c3;color:#b45309;border:2px solid #b45309}
+
+/* ── 사이드바 섹션 타이틀 ────────────────────── */
+.side-title{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+
+/* ── 수치 강조 카드 ─────────────────────────── */
+.stat-box{text-align:center;padding:14px 10px}
+.stat-num{font-size:24px;font-weight:900;line-height:1}
+.stat-lbl{font-size:10px;color:var(--g400);margin-top:4px}
+
+/* ── 테이블 ─────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--g50);color:var(--g600);font-weight:700;padding:8px 12px;text-align:left;border-bottom:2px solid var(--g200)}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--g100);color:var(--g900)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--g50)}
+
+/* ── 진행 스텝 ──────────────────────────────── */
+.step-flow{display:flex;align-items:center;gap:0}
+.step-node{display:flex;flex-direction:column;align-items:center;gap:4px}
+.step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.step-line-h{flex:1;height:2px;background:linear-gradient(90deg,var(--blue),var(--blue2));min-width:24px}
+
+/* ── 자산 카드 ──────────────────────────────── */
+.asset-card{border-radius:10px;padding:14px;border:1px solid var(--g200);background:#fff;position:relative;overflow:hidden}
+.asset-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.asset-blue::before{background:linear-gradient(90deg,var(--blue),var(--blue2))}
+.asset-blue2::before{background:linear-gradient(90deg,var(--blue2),#93c5fd)}
+.asset-purple::before{background:linear-gradient(90deg,var(--purple),#a78bfa)}
+.asset-green::before{background:linear-gradient(90deg,var(--green),#34d399)}
+.asset-orange::before{background:linear-gradient(90deg,var(--orange),#fb923c)}
+.asset-teal::before{background:linear-gradient(90deg,var(--teal),#38bdf8)}
+
+/* ── BIM 객체 카드 ──────────────────────────── */
+.bim-obj-card{border-radius:10px;padding:14px;border:2px solid var(--g200);background:#fff;transition:.2s;cursor:pointer}
+.bim-obj-card.active{border-color:var(--blue);background:rgba(26,86,219,.02);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+.bim-obj-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px}
+.bim-obj-type{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.bim-obj-name{font-size:14px;font-weight:800;color:var(--g900);margin-bottom:6px}
+.bim-obj-count{font-size:11px;color:var(--g600)}
+
+/* ── 속성 배지 ──────────────────────────────── */
+.prop-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;background:var(--g50);border:1px solid var(--g200);color:var(--g600);margin:2px}
+.prop-badge-blue{background:rgba(26,86,219,.06);border-color:rgba(26,86,219,.15);color:var(--blue)}
+.prop-badge-green{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2);color:#047857}
+.prop-badge-purple{background:rgba(139,92,246,.06);border-color:rgba(139,92,246,.2);color:#6d28d9}
+
+/* ── 연결 화살표 다이어그램 ─────────────────── */
+.flow-node{border-radius:10px;padding:12px 16px;text-align:center;font-size:11px;font-weight:700;border:1.5px solid transparent;flex:1}
+.flow-arrow{display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--g400);padding:0 4px;flex-shrink:0}
+
+/* ── IFC/포맷 카드 ──────────────────────────── */
+.fmt-card{border-radius:10px;padding:12px 14px;border:1.5px solid var(--g200);background:#fff;display:flex;align-items:center;gap:12px;transition:.2s}
+.fmt-card:hover{border-color:var(--blue2);box-shadow:var(--shh)}
+.fmt-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;flex-shrink:0}
+
+/* ── 라이브러리 타입 열 ─────────────────────── */
+.lib-type-header{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g600);padding:6px 10px;background:var(--g50);border-radius:6px;margin-bottom:10px}
+.lib-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;margin-bottom:6px;border:1px solid var(--g200);background:#fff;font-size:12px}
+.lib-item-new{border-color:rgba(26,86,219,.2);background:rgba(26,86,219,.02)}
+.lib-item-used{border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.02)}
+
+/* ── 폼 입력 목업 ───────────────────────────── */
+.form-input-mock{background:var(--g50);border:1.5px solid var(--g200);border-radius:9px;padding:9px 14px;font-size:12px;color:var(--g900);width:100%}
+.form-label{font-size:10px;font-weight:600;color:var(--g600);margin-bottom:4px;display:block}
+
+/* ── 수량표 행 강조 ─────────────────────────── */
+.qty-row-total{background:rgba(26,86,219,.04);font-weight:700}
+
+/* ── 스크롤바 ────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ══ 탑바 ══════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">UnitBuild</div>
+      <div class="logo-sub">모듈러 BIM 자동화</div>
+    </div>
+  </div>
+  <button class="tab-btn active" onclick="showTab(0)">① 설계안 BIM 객체 변환</button>
+  <button class="tab-btn" onclick="showTab(1)">② BIM 객체 속성·수량 정보</button>
+  <button class="tab-btn" onclick="showTab(2)">③ BIM 연계 데이터 출력</button>
+  <button class="tab-btn" onclick="showTab(3)">④ 모듈·부재 라이브러리</button>
+  <div class="group-badge">🔩 그룹 C — BIM 자동화</div>
+</div>
+
+<script>
+function showTab(i){
+  document.querySelectorAll('.screen').forEach((s,idx)=>{s.classList.toggle('active',idx===i)});
+  document.querySelectorAll('.tab-btn').forEach((b,idx)=>{b.classList.toggle('active',idx===i)});
+}
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #23 — 설계안 BIM 객체 변환
+════════════════════════════════════════════════════════════ -->
+<div class="screen active" id="s0">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #23 · 그룹 C — BIM 자동화</div>
+    <div class="screen-title">설계안 BIM 객체 변환</div>
+    <div class="screen-desc">기획설계 배치·평면 결과를 모듈·부재·공간·접합 4대 객체 유형으로 자동 분해·변환</div>
+  </div>
+
+  <!-- 상단: 인계된 설계안 배너 -->
+  <div style="background:linear-gradient(135deg,var(--blue) 0%,#1e40af 100%);border-radius:var(--r);padding:16px 22px;color:#fff;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">연결된 설계안 — 그룹 B 기획설계 결과 자동 인계</div>
+      <div style="font-size:18px;font-weight:900">면목동 612-6 · 중앙집중형 · BALCONY-3 · 5층 · 32세대</div>
+      <div style="font-size:12px;opacity:.8;margin-top:2px">대안 1 선정 · 건폐율 52.4% · 용적률 218% · 면적효율 87% · ROI 12.4%</div>
+    </div>
+    <div style="display:flex;gap:20px;align-items:center">
+      <div style="text-align:center"><div style="font-size:20px;font-weight:900">32</div><div style="font-size:10px;opacity:.7">세대수</div></div>
+      <div style="width:1px;background:rgba(255,255,255,.2);height:40px"></div>
+      <div style="text-align:center"><div style="font-size:20px;font-weight:900">5층</div><div style="font-size:10px;opacity:.7">층수</div></div>
+      <div style="width:1px;background:rgba(255,255,255,.2);height:40px"></div>
+      <div style="text-align:center"><div style="font-size:20px;font-weight:900">87%</div><div style="font-size:10px;opacity:.7">면적효율</div></div>
+      <div style="width:1px;background:rgba(255,255,255,.2);height:40px"></div>
+      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:9px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">BIM 변환 실행 →</div>
+    </div>
+  </div>
+
+  <!-- BIM 변환 프로세스 플로우 -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div class="section-tag">CONVERSION PIPELINE</div>
+        <div style="font-size:15px;font-weight:800;color:var(--g900);margin-top:6px">BIM 객체 자동 변환 파이프라인</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:#047857">✓ 변환 완료 — 4.2초</div>
+        <div style="background:var(--blue);color:#fff;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">IFC 내보내기</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:stretch;gap:6px;margin-bottom:8px">
+      <div class="flow-node" style="background:rgba(26,86,219,.06);border-color:rgba(26,86,219,.2);color:var(--blue)">
+        <div style="font-size:16px;margin-bottom:4px">📐</div>
+        <div>기획설계 도면</div>
+        <div style="font-size:10px;font-weight:500;color:var(--g400);margin-top:2px">배치·평면·단면</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="background:rgba(139,92,246,.06);border-color:rgba(139,92,246,.2);color:var(--purple)">
+        <div style="font-size:16px;margin-bottom:4px">🔍</div>
+        <div>형상 인식</div>
+        <div style="font-size:10px;font-weight:500;color:var(--g400);margin-top:2px">모듈 경계 검출</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);color:#b45309">
+        <div style="font-size:16px;margin-bottom:4px">🧩</div>
+        <div>객체 분류</div>
+        <div style="font-size:10px;font-weight:500;color:var(--g400);margin-top:2px">4대 유형 매핑</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2);color:#047857">
+        <div style="font-size:16px;margin-bottom:4px">📦</div>
+        <div>속성 삽입</div>
+        <div style="font-size:10px;font-weight:500;color:var(--g400);margin-top:2px">규격·재료·수량</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="background:rgba(26,86,219,.1);border-color:var(--blue);color:var(--blue)">
+        <div style="font-size:16px;margin-bottom:4px">🏗️</div>
+        <div>BIM 모델</div>
+        <div style="font-size:10px;font-weight:500;color:var(--g400);margin-top:2px">IFC / Revit</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4대 BIM 객체 유형 -->
+  <div style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:13px;font-weight:800;color:var(--g900)">4대 BIM 객체 유형</div>
+    <div style="font-size:11px;color:var(--g400)">총 객체 수: <strong style="color:var(--blue)">247개</strong></div>
+  </div>
+  <div class="grid-4" style="margin-bottom:16px">
+
+    <!-- 모듈 객체 -->
+    <div class="bim-obj-card active">
+      <div class="bim-obj-icon" style="background:rgba(26,86,219,.1)">🏠</div>
+      <div class="bim-obj-type" style="color:var(--blue)">MODULE</div>
+      <div class="bim-obj-name">모듈 객체</div>
+      <div class="bim-obj-count" style="margin-bottom:10px">32개 · 세대 모듈 단위</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+        <span class="chip chip-blue" style="font-size:10px">BALCONY-3</span>
+        <span class="chip chip-blue2" style="font-size:10px">T-15 계열</span>
+      </div>
+      <div class="score-bar"><div class="score-fill" style="width:82%;background:var(--blue)"></div></div>
+      <div style="font-size:10px;color:var(--g400);margin-top:4px">변환율 82% · 8개 미확인</div>
+    </div>
+
+    <!-- 부재 객체 -->
+    <div class="bim-obj-card">
+      <div class="bim-obj-icon" style="background:rgba(139,92,246,.1)">🔩</div>
+      <div class="bim-obj-type" style="color:var(--purple)">ELEMENT</div>
+      <div class="bim-obj-name">부재 객체</div>
+      <div class="bim-obj-count" style="margin-bottom:10px">148개 · 벽·바닥·지붕·계단</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+        <span class="chip chip-purple" style="font-size:10px">벽체 84</span>
+        <span class="chip chip-purple" style="font-size:10px">바닥 42</span>
+        <span class="chip chip-purple" style="font-size:10px">기타 22</span>
+      </div>
+      <div class="score-bar"><div class="score-fill" style="width:96%;background:var(--purple)"></div></div>
+      <div style="font-size:10px;color:var(--g400);margin-top:4px">변환율 96% · 6개 미확인</div>
+    </div>
+
+    <!-- 공간 객체 -->
+    <div class="bim-obj-card">
+      <div class="bim-obj-icon" style="background:rgba(16,185,129,.1)">🏢</div>
+      <div class="bim-obj-type" style="color:var(--green)">SPACE</div>
+      <div class="bim-obj-name">공간 객체</div>
+      <div class="bim-obj-count" style="margin-bottom:10px">52개 · 실·복도·코어·주차</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+        <span class="chip chip-green" style="font-size:10px">거실/침실 32</span>
+        <span class="chip chip-green" style="font-size:10px">코어 10</span>
+        <span class="chip chip-green" style="font-size:10px">공용 10</span>
+      </div>
+      <div class="score-bar"><div class="score-fill" style="width:100%;background:var(--green)"></div></div>
+      <div style="font-size:10px;color:var(--g400);margin-top:4px">변환율 100% · 완전 변환</div>
+    </div>
+
+    <!-- 접합 객체 -->
+    <div class="bim-obj-card">
+      <div class="bim-obj-icon" style="background:rgba(245,158,11,.1)">🔗</div>
+      <div class="bim-obj-type" style="color:var(--amber)">JOINT</div>
+      <div class="bim-obj-name">접합 객체</div>
+      <div class="bim-obj-count" style="margin-bottom:10px">15개 · 모듈간 연결 접합</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+        <span class="chip chip-amber" style="font-size:10px">수평접합 8</span>
+        <span class="chip chip-amber" style="font-size:10px">수직접합 7</span>
+      </div>
+      <div class="score-bar"><div class="score-fill" style="width:93%;background:var(--amber)"></div></div>
+      <div style="font-size:10px;color:var(--g400);margin-top:4px">변환율 93% · 1개 검토 필요</div>
+    </div>
+
+  </div>
+
+  <!-- 하단: 층별 BIM 객체 구성 + 단면 다이어그램 -->
+  <div class="grid-2">
+    <!-- 층별 분해 -->
+    <div class="card">
+      <div class="side-title">층별 BIM 객체 분해</div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>층</th>
+            <th>모듈</th>
+            <th>부재</th>
+            <th>공간</th>
+            <th>접합</th>
+            <th>합계</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>RF 옥상</strong></td><td>–</td><td>8</td><td>2</td><td>–</td><td>10</td></tr>
+          <tr><td><strong>5층</strong></td><td>7</td><td>32</td><td>12</td><td>4</td><td>55</td></tr>
+          <tr><td><strong>4층</strong></td><td>7</td><td>30</td><td>10</td><td>3</td><td>50</td></tr>
+          <tr><td><strong>3층</strong></td><td>7</td><td>30</td><td>10</td><td>3</td><td>50</td></tr>
+          <tr><td><strong>2층</strong></td><td>7</td><td>30</td><td>10</td><td>3</td><td>50</td></tr>
+          <tr><td><strong>1층</strong></td><td>4</td><td>18</td><td>8</td><td>2</td><td>32</td></tr>
+          <tr class="qty-row-total"><td><strong>합계</strong></td><td><strong>32</strong></td><td><strong>148</strong></td><td><strong>52</strong></td><td><strong>15</strong></td><td><strong>247</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- BIM 객체 다이어그램 -->
+    <div class="card">
+      <div class="side-title">BIM 객체 관계도 — 중앙집중형 2동병렬</div>
+      <div style="background:var(--g50);border-radius:10px;padding:16px;min-height:200px;position:relative">
+        <!-- 건물 다이어그램 -->
+        <div style="display:flex;gap:8px;justify-content:center;align-items:flex-end;height:170px">
+          <!-- 동 A -->
+          <div style="display:flex;flex-direction:column;gap:3px;align-items:center">
+            <div style="font-size:9px;font-weight:700;color:var(--g400);margin-bottom:4px">동 A</div>
+            <div style="width:90px;height:22px;background:rgba(26,86,219,.15);border:1.5px solid rgba(26,86,219,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--blue)">5F · 7세대</div>
+            <div style="width:90px;height:22px;background:rgba(26,86,219,.12);border:1.5px solid rgba(26,86,219,.25);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--blue)">4F · 7세대</div>
+            <div style="width:90px;height:22px;background:rgba(26,86,219,.09);border:1.5px solid rgba(26,86,219,.2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--blue)">3F · 7세대</div>
+            <div style="width:90px;height:22px;background:rgba(26,86,219,.06);border:1.5px solid rgba(26,86,219,.15);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--blue)">2F · 7세대</div>
+            <div style="width:90px;height:22px;background:rgba(16,185,129,.1);border:1.5px solid rgba(16,185,129,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#047857">1F · 4세대</div>
+          </div>
+          <!-- 접합 연결 표시 -->
+          <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;gap:6px">
+            <div style="font-size:9px;font-weight:700;color:var(--amber);text-align:center">접합<br>JOINT</div>
+            <div style="width:24px;border-top:2px dashed var(--amber)"></div>
+            <div style="width:24px;border-top:2px dashed var(--amber)"></div>
+            <div style="width:24px;border-top:2px dashed var(--amber)"></div>
+            <div style="width:24px;border-top:2px dashed var(--amber)"></div>
+          </div>
+          <!-- 동 B -->
+          <div style="display:flex;flex-direction:column;gap:3px;align-items:center">
+            <div style="font-size:9px;font-weight:700;color:var(--g400);margin-bottom:4px">동 B</div>
+            <div style="width:90px;height:22px;background:rgba(59,130,246,.15);border:1.5px solid rgba(59,130,246,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#1d4ed8">5F · 7세대</div>
+            <div style="width:90px;height:22px;background:rgba(59,130,246,.12);border:1.5px solid rgba(59,130,246,.25);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#1d4ed8">4F · 7세대</div>
+            <div style="width:90px;height:22px;background:rgba(59,130,246,.09);border:1.5px solid rgba(59,130,246,.2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#1d4ed8">3F · 7세대</div>
+            <div style="width:90px;height:22px;background:rgba(59,130,246,.06);border:1.5px solid rgba(59,130,246,.15);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#1d4ed8">2F · 7세대</div>
+            <div style="width:90px;height:22px;background:rgba(16,185,129,.1);border:1.5px solid rgba(16,185,129,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#047857">1F · 4세대</div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--g400)">BALCONY-3 모듈 (T타입 15평) · 2동 병렬 배치</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <span class="chip chip-blue" style="font-size:10px">🏠 MODULE: 32</span>
+        <span class="chip chip-purple" style="font-size:10px">🔩 ELEMENT: 148</span>
+        <span class="chip chip-green" style="font-size:10px">🏢 SPACE: 52</span>
+        <span class="chip chip-amber" style="font-size:10px">🔗 JOINT: 15</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 배너 -->
+  <div class="msg-banner">
+    <div class="msg-arrow">🔩</div>
+    <div class="msg-text">
+      <div class="msg-label">BIM CONVERSION RESULT</div>
+      기획설계 배치·평면안이 <strong>247개 BIM 객체</strong>로 4.2초 만에 자동 변환되었습니다.
+      모듈·부재·공간·접합 4대 유형으로 분류되어 구조검토, 제조, 시공 데이터와 즉시 연계됩니다.
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #24 — BIM 객체 속성·수량 정보
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s1">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #24 · 그룹 C — BIM 자동화</div>
+    <div class="screen-title">BIM 객체 속성·수량 정보</div>
+    <div class="screen-desc">각 객체별 면적·수량·재료·스펙·접합조건 자동 산출 및 보기</div>
+  </div>
+
+  <!-- 객체 유형 선택 탭 -->
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <div style="padding:8px 18px;border-radius:10px;background:var(--blue);color:#fff;font-size:12px;font-weight:700;cursor:pointer">🏠 모듈 (32)</div>
+    <div style="padding:8px 18px;border-radius:10px;background:var(--g100);color:var(--g600);font-size:12px;font-weight:700;cursor:pointer">🔩 부재 (148)</div>
+    <div style="padding:8px 18px;border-radius:10px;background:var(--g100);color:var(--g600);font-size:12px;font-weight:700;cursor:pointer">🏢 공간 (52)</div>
+    <div style="padding:8px 18px;border-radius:10px;background:var(--g100);color:var(--g600);font-size:12px;font-weight:700;cursor:pointer">🔗 접합 (15)</div>
+    <div style="margin-left:auto;padding:8px 18px;border-radius:10px;background:var(--g100);color:var(--g600);font-size:12px;font-weight:700;cursor:pointer">CSV 내보내기</div>
+  </div>
+
+  <div class="grid-2" style="align-items:start">
+    <!-- 왼쪽: 모듈 목록 -->
+    <div class="card" style="padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="side-title">모듈 객체 목록</div>
+        <span class="chip chip-blue">BALCONY-3 타입</span>
+      </div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>모듈명</th>
+            <th>층</th>
+            <th>전용면적</th>
+            <th>상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:rgba(26,86,219,.03)">
+            <td style="font-weight:700;color:var(--blue)">M-001</td>
+            <td>T-15-2 · 발코니형</td><td>1F</td><td>44.7㎡</td>
+            <td><span class="chip chip-green" style="font-size:10px">확인</span></td>
+          </tr>
+          <tr><td style="font-weight:700;color:var(--blue)">M-002</td><td>T-15-2 · 발코니형</td><td>1F</td><td>44.7㎡</td><td><span class="chip chip-green" style="font-size:10px">확인</span></td></tr>
+          <tr><td style="font-weight:700;color:var(--blue)">M-003</td><td>T-15-1 · 발코니형</td><td>1F</td><td>44.2㎡</td><td><span class="chip chip-green" style="font-size:10px">확인</span></td></tr>
+          <tr><td style="font-weight:700;color:var(--blue)">M-004</td><td>T-15-1 · 발코니형</td><td>1F</td><td>44.2㎡</td><td><span class="chip chip-green" style="font-size:10px">확인</span></td></tr>
+          <tr><td style="font-weight:700;color:var(--blue)">M-005</td><td>T-15-3 · 코너형</td><td>2F</td><td>44.8㎡</td><td><span class="chip chip-green" style="font-size:10px">확인</span></td></tr>
+          <tr><td style="font-weight:700;color:var(--blue)">M-006</td><td>T-15-3 · 코너형</td><td>2F</td><td>44.8㎡</td><td><span class="chip chip-green" style="font-size:10px">확인</span></td></tr>
+          <tr><td style="font-weight:700;color:var(--blue)">M-007</td><td>T-15-4 · 표준형</td><td>2F</td><td>44.5㎡</td><td><span class="chip chip-green" style="font-size:10px">확인</span></td></tr>
+          <tr><td style="font-weight:700;color:var(--blue)">M-008</td><td>T-15-4 · 표준형</td><td>2F</td><td>44.5㎡</td><td><span class="chip chip-amber" style="font-size:10px">검토</span></td></tr>
+          <tr><td style="color:var(--g400)" colspan="5" style="text-align:center;padding:8px">… M-009 ~ M-032 (총 32개)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 오른쪽: 상세 속성 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 선택 모듈 상세 -->
+      <div class="card" style="border:2px solid var(--blue)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div>
+            <span class="chip chip-blue">M-001 선택됨</span>
+            <div style="font-size:15px;font-weight:800;margin-top:6px;color:var(--g900)">T-15-2 · 발코니형 · 1F-A동</div>
+          </div>
+          <div style="background:rgba(16,185,129,.1);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;color:#047857">✓ 검증 완료</div>
+        </div>
+
+        <!-- 면적 속성 -->
+        <div class="lib-type-header">📐 면적 속성</div>
+        <div class="grid-3" style="gap:8px;margin-bottom:14px">
+          <div class="card-sm" style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:var(--blue)">44.7</div>
+            <div style="font-size:10px;color:var(--g400)">전용면적 (㎡)</div>
+          </div>
+          <div class="card-sm" style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:var(--blue2)">49.5</div>
+            <div style="font-size:10px;color:var(--g400)">공급면적 (㎡)</div>
+          </div>
+          <div class="card-sm" style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:var(--purple)">6.8</div>
+            <div style="font-size:10px;color:var(--g400)">발코니 (㎡)</div>
+          </div>
+        </div>
+
+        <!-- 재료·스펙 속성 -->
+        <div class="lib-type-header">🔨 재료·스펙 속성</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+          <span class="prop-badge prop-badge-blue">구조: CLT 목구조</span>
+          <span class="prop-badge prop-badge-blue">외벽: 고단열 패널 200mm</span>
+          <span class="prop-badge prop-badge-green">바닥: 경량기포콘크리트 50mm</span>
+          <span class="prop-badge prop-badge-green">마감: 강마루 12mm</span>
+          <span class="prop-badge prop-badge-purple">창호: 3중유리 커튼월</span>
+          <span class="prop-badge prop-badge-purple">욕실: 유닛배스 1400×1600</span>
+          <span class="prop-badge">지붕: 단열방수복합패널</span>
+          <span class="prop-badge">내벽: 석고보드 2겹</span>
+        </div>
+
+        <!-- 접합 조건 -->
+        <div class="lib-type-header">🔗 접합 조건</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px">
+            <div style="font-size:10px;font-weight:700;color:var(--amber);margin-bottom:4px">동측 접합 (J-001)</div>
+            <div style="font-size:11px;color:var(--g600)">수평 맞댐 · 볼트 M20×4</div>
+            <div style="font-size:11px;color:var(--g600)">공차 ±3mm · 방수테이프</div>
+          </div>
+          <div style="flex:1;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px">
+            <div style="font-size:10px;font-weight:700;color:var(--amber);margin-bottom:4px">상부 접합 (J-009)</div>
+            <div style="font-size:11px;color:var(--g600)">수직 적층 · 전단키 삽입</div>
+            <div style="font-size:11px;color:var(--g600)">방진패드 10mm · 실링</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 전체 수량 요약 -->
+      <div class="card">
+        <div class="side-title">전체 수량 산출 요약</div>
+        <div class="grid-3" style="gap:8px">
+          <div style="text-align:center;padding:10px;background:rgba(26,86,219,.04);border-radius:8px">
+            <div style="font-size:20px;font-weight:900;color:var(--blue)">1,432</div>
+            <div style="font-size:10px;color:var(--g400)">총 부재 수량 (개)</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:rgba(16,185,129,.04);border-radius:8px">
+            <div style="font-size:20px;font-weight:900;color:var(--green)">2,841</div>
+            <div style="font-size:10px;color:var(--g400)">연면적 합계 (㎡)</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:rgba(139,92,246,.04);border-radius:8px">
+            <div style="font-size:20px;font-weight:900;color:var(--purple)">34억</div>
+            <div style="font-size:10px;color:var(--g400)">예상 공사비</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 재료별 수량표 -->
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div class="section-tag">QUANTITY SCHEDULE</div>
+        <div style="font-size:15px;font-weight:800;margin-top:6px">재료·부재별 수량표 (자동 산출)</div>
+      </div>
+      <div style="font-size:11px;color:var(--g400)">BALCONY-3 · T-15계열 기준 · 32세대</div>
+    </div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>구분</th>
+          <th>품목</th>
+          <th>규격</th>
+          <th>단위</th>
+          <th>수량</th>
+          <th>단가(만원)</th>
+          <th>금액(억)</th>
+          <th>비고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="3" style="font-weight:700;color:var(--blue)">구조</td><td>CLT 패널</td><td>t120, Larch</td><td>㎡</td><td>3,240</td><td>22</td><td>7.1</td><td>유닛랩 공장 제작</td></tr>
+        <tr><td>H형강</td><td>H-200×200</td><td>ton</td><td>48.2</td><td>180</td><td>8.7</td><td>접합부 보강용</td></tr>
+        <tr><td>앵커볼트</td><td>M20×150</td><td>EA</td><td>960</td><td>0.5</td><td>0.05</td><td>모듈 접합부</td></tr>
+        <tr><td rowspan="2" style="font-weight:700;color:var(--purple)">외피</td><td>고단열패널</td><td>200mm EPS+GRC</td><td>㎡</td><td>2,180</td><td>18</td><td>3.9</td><td>U-value 0.15</td></tr>
+        <tr><td>커튼월</td><td>3중유리 알루미늄</td><td>㎡</td><td>840</td><td>28</td><td>2.4</td><td>T-15 표준 규격</td></tr>
+        <tr><td rowspan="2" style="font-weight:700;color:var(--green)">내장</td><td>강마루</td><td>t12 합판마루</td><td>㎡</td><td>1,430</td><td>4</td><td>0.6</td><td>전세대 동일</td></tr>
+        <tr><td>유닛배스</td><td>1400×1600 기성품</td><td>SET</td><td>32</td><td>280</td><td>0.9</td><td>BALCONY-3 표준</td></tr>
+        <tr class="qty-row-total"><td colspan="6" style="font-weight:700">합계</td><td style="font-weight:900;color:var(--blue)">약 34억</td><td>VAT별도</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="msg-banner">
+    <div class="msg-arrow">📊</div>
+    <div class="msg-text">
+      <div class="msg-label">QUANTITY SCHEDULE</div>
+      32세대 BALCONY-3 모듈의 전체 BIM 속성과 수량이 자동 산출되었습니다.
+      <strong>CLT 구조 3,240㎡, 커튼월 840㎡, 유닛배스 32세트</strong> 등 모든 부재 수량이 구조검토·제조·시공과 즉시 연계됩니다.
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #25 — BIM 연계 데이터 출력
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s2">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #25 · 그룹 C — BIM 자동화</div>
+    <div class="screen-title">BIM 연계 데이터 출력</div>
+    <div class="screen-desc">구조검토·제조·시공 연계 데이터 포맷 출력 및 모듈 객체 재사용 관계도</div>
+  </div>
+
+  <!-- 상단: 출력 통계 요약 -->
+  <div class="grid-4" style="margin-bottom:16px">
+    <div class="card" style="text-align:center;padding:18px">
+      <div style="font-size:28px;font-weight:900;color:var(--blue)">4</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:2px">출력 포맷 종류</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px">
+      <div style="font-size:28px;font-weight:900;color:var(--green)">247</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:2px">연계 BIM 객체 수</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px">
+      <div style="font-size:28px;font-weight:900;color:var(--purple)">3</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:2px">연계 시스템 수</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px">
+      <div style="font-size:28px;font-weight:900;color:var(--amber)">2.1초</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:2px">전체 출력 시간</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="align-items:start">
+    <!-- 왼쪽: 포맷 출력 카드 -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="section-tag" style="margin-bottom:10px">OUTPUT FORMATS</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:14px">출력 포맷 선택</div>
+
+        <!-- IFC -->
+        <div class="fmt-card" style="margin-bottom:10px;border-color:var(--blue);background:rgba(26,86,219,.02)">
+          <div class="fmt-icon" style="background:var(--blue);color:#fff">IFC</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--g900)">IFC 4.0</div>
+            <div style="font-size:11px;color:var(--g400)">국제 표준 BIM 포맷 · 구조·MEP·건축 통합</div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <span class="chip chip-blue" style="font-size:10px">IfcBuilding</span>
+              <span class="chip chip-blue" style="font-size:10px">IfcElement</span>
+              <span class="chip chip-blue" style="font-size:10px">IfcSpace</span>
+            </div>
+          </div>
+          <div style="background:var(--blue);color:#fff;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">내보내기</div>
+        </div>
+
+        <!-- Revit -->
+        <div class="fmt-card" style="margin-bottom:10px">
+          <div class="fmt-icon" style="background:rgba(249,115,22,.15);color:var(--orange)">RVT</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--g900)">Revit 패밀리 (.rfa)</div>
+            <div style="font-size:11px;color:var(--g400)">Autodesk Revit 호환 · 모듈 패밀리 포함</div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <span class="chip chip-orange" style="font-size:10px">Family</span>
+              <span class="chip chip-orange" style="font-size:10px">Type Catalog</span>
+            </div>
+          </div>
+          <div style="background:var(--g100);color:var(--g600);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">내보내기</div>
+        </div>
+
+        <!-- 구조해석 -->
+        <div class="fmt-card" style="margin-bottom:10px">
+          <div class="fmt-icon" style="background:rgba(139,92,246,.15);color:var(--purple)">SAF</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--g900)">구조해석 (.saf / .xml)</div>
+            <div style="font-size:11px;color:var(--g400)">MIDAS / ETABS 연계 · 부재 하중·응력 포함</div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <span class="chip chip-purple" style="font-size:10px">Node</span>
+              <span class="chip chip-purple" style="font-size:10px">Load Case</span>
+              <span class="chip chip-purple" style="font-size:10px">Section</span>
+            </div>
+          </div>
+          <div style="background:var(--g100);color:var(--g600);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">내보내기</div>
+        </div>
+
+        <!-- 제조 CNC -->
+        <div class="fmt-card">
+          <div class="fmt-icon" style="background:rgba(16,185,129,.15);color:var(--green)">CNC</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--g900)">제조 데이터 (.dxf / .step)</div>
+            <div style="font-size:11px;color:var(--g400)">공장 CNC 직접 연계 · CLT 패널 절단 데이터</div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <span class="chip chip-green" style="font-size:10px">DXF 2D</span>
+              <span class="chip chip-green" style="font-size:10px">STEP 3D</span>
+              <span class="chip chip-green" style="font-size:10px">Nesting</span>
+            </div>
+          </div>
+          <div style="background:var(--g100);color:var(--g600);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">내보내기</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 객체 재사용 관계도 + 연계 시스템 -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <!-- 모듈 재사용 관계도 -->
+      <div class="card">
+        <div class="section-tag" style="margin-bottom:10px">REUSE MAP</div>
+        <div style="font-size:14px;font-weight:800;margin-bottom:14px">모듈 객체 재사용 관계도</div>
+        <div style="background:var(--g50);border-radius:10px;padding:14px">
+          <!-- 재사용 관계 트리 -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <!-- T-15 계열 -->
+            <div style="background:#fff;border-radius:8px;border:1.5px solid rgba(26,86,219,.2);padding:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:12px;font-weight:800;color:var(--blue)">T-15계열 (15평 · 49.5㎡)</span>
+                <span class="chip chip-blue" style="font-size:10px">28개 사용</span>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <div style="background:rgba(26,86,219,.06);border:1px solid rgba(26,86,219,.15);border-radius:6px;padding:6px 10px;font-size:10px;font-weight:700;color:var(--blue)">T-15-1 · 7세대</div>
+                <div style="background:rgba(26,86,219,.06);border:1px solid rgba(26,86,219,.15);border-radius:6px;padding:6px 10px;font-size:10px;font-weight:700;color:var(--blue)">T-15-2 · 8세대</div>
+                <div style="background:rgba(26,86,219,.06);border:1px solid rgba(26,86,219,.15);border-radius:6px;padding:6px 10px;font-size:10px;font-weight:700;color:var(--blue)">T-15-3 · 7세대</div>
+                <div style="background:rgba(26,86,219,.06);border:1px solid rgba(26,86,219,.15);border-radius:6px;padding:6px 10px;font-size:10px;font-weight:700;color:var(--blue)">T-15-4 · 6세대</div>
+              </div>
+            </div>
+            <!-- T-12 계열 (소형) -->
+            <div style="background:#fff;border-radius:8px;border:1.5px solid rgba(59,130,246,.2);padding:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:12px;font-weight:800;color:var(--blue2)">T-12계열 (12평 · 39.6㎡) — 소형</span>
+                <span class="chip chip-blue2" style="font-size:10px">4개 사용</span>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:6px;padding:6px 10px;font-size:10px;font-weight:700;color:#1d4ed8">T-12-1 · 2세대</div>
+                <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:6px;padding:6px 10px;font-size:10px;font-weight:700;color:#1d4ed8">T-12-2 · 2세대</div>
+              </div>
+            </div>
+            <!-- 공용부 -->
+            <div style="background:#fff;border-radius:8px;border:1.5px solid rgba(16,185,129,.2);padding:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:12px;font-weight:800;color:var(--green)">공용부 · 코어 객체</span>
+                <span class="chip chip-green" style="font-size:10px">코어 2개, 계단 2개</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 연계 시스템 -->
+      <div class="card">
+        <div class="side-title">3대 연계 시스템</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(139,92,246,.04);border-radius:8px;border:1px solid rgba(139,92,246,.15)">
+            <div style="width:36px;height:36px;background:rgba(139,92,246,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏗️</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:800;color:var(--g900)">D그룹 — 구조검토 연계</div>
+              <div style="font-size:11px;color:var(--g600)">SAF / MIDAS Civil 하중·응력 데이터 전달</div>
+            </div>
+            <div style="background:rgba(16,185,129,.1);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#047857">연계 완료</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(16,185,129,.04);border-radius:8px;border:1px solid rgba(16,185,129,.15)">
+            <div style="width:36px;height:36px;background:rgba(16,185,129,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏭</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:800;color:var(--g900)">E그룹 — 제조 자동화 연계</div>
+              <div style="font-size:11px;color:var(--g600)">CNC DXF/STEP · CLT 절단 Nesting 데이터</div>
+            </div>
+            <div style="background:rgba(16,185,129,.1);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#047857">연계 완료</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(245,158,11,.04);border-radius:8px;border:1px solid rgba(245,158,11,.15)">
+            <div style="width:36px;height:36px;background:rgba(245,158,11,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🚧</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:800;color:var(--g900)">F그룹 — 시공 관리 연계</div>
+              <div style="font-size:11px;color:var(--g600)">4D 공정 BIM · 모듈 설치 시퀀스 데이터</div>
+            </div>
+            <div style="background:rgba(245,158,11,.1);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:#b45309">준비 중</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div class="msg-arrow">📡</div>
+    <div class="msg-text">
+      <div class="msg-label">DATA OUTPUT</div>
+      BIM 연계 데이터 <strong>4종 포맷(IFC·RVT·SAF·CNC)</strong>이 2.1초 만에 자동 생성되었습니다.
+      구조검토(D그룹), 제조 자동화(E그룹)와 즉시 연계되며, 모듈 재사용 관계도를 통해 T-15·T-12 계열 객체가 라이브러리에 자동 등록됩니다.
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #26 — 모듈·부재 라이브러리 & 표준 BIM 템플릿
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s3">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #26 · 그룹 C — BIM 자동화</div>
+    <div class="screen-title">모듈·부재 라이브러리 & 표준 BIM 템플릿</div>
+    <div class="screen-desc">표준 객체·제품군 BIM 템플릿 구축 및 재사용 이력 관리</div>
+  </div>
+
+  <!-- 라이브러리 현황 요약 -->
+  <div class="grid-4" style="margin-bottom:16px">
+    <div class="card" style="text-align:center;padding:16px">
+      <div style="font-size:26px;font-weight:900;color:var(--blue)">38</div>
+      <div style="font-size:11px;color:var(--g400)">전체 BIM 템플릿</div>
+      <div class="score-bar" style="margin-top:8px"><div class="score-fill" style="width:76%;background:var(--blue)"></div></div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px">
+      <div style="font-size:26px;font-weight:900;color:var(--green)">+5</div>
+      <div style="font-size:11px;color:var(--g400)">이번 프로젝트 신규</div>
+      <div class="score-bar" style="margin-top:8px"><div class="score-fill" style="width:40%;background:var(--green)"></div></div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px">
+      <div style="font-size:26px;font-weight:900;color:var(--purple)">127회</div>
+      <div style="font-size:11px;color:var(--g400)">누적 재사용 횟수</div>
+      <div class="score-bar" style="margin-top:8px"><div class="score-fill" style="width:85%;background:var(--purple)"></div></div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px">
+      <div style="font-size:26px;font-weight:900;color:var(--amber)">6.1초</div>
+      <div style="font-size:11px;color:var(--g400)">평균 BIM 재생성 시간</div>
+      <div class="score-bar" style="margin-top:8px"><div class="score-fill" style="width:60%;background:var(--amber)"></div></div>
+    </div>
+  </div>
+
+  <!-- 제품군별 라이브러리 -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div class="section-tag">BIM LIBRARY</div>
+        <div style="font-size:15px;font-weight:800;margin-top:6px">유닛랩 제품군별 BIM 템플릿 라이브러리</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="background:var(--g100);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:var(--g600);cursor:pointer">+ 신규 등록</div>
+        <div style="background:var(--blue);color:#fff;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">전체 내보내기</div>
+      </div>
+    </div>
+
+    <div class="grid-4" style="gap:12px">
+
+      <!-- U 타입 (6~9평) -->
+      <div style="border-radius:10px;border:1.5px solid var(--g200);overflow:hidden">
+        <div style="background:linear-gradient(135deg,#0ea5e9,#38bdf8);padding:10px 14px;color:#fff">
+          <div style="font-size:10px;font-weight:700;opacity:.8;letter-spacing:.06em">U-TYPE</div>
+          <div style="font-size:14px;font-weight:900">U 타입</div>
+          <div style="font-size:10px;opacity:.8">6평~9평 · 19.8~29.7㎡</div>
+        </div>
+        <div style="padding:10px;background:#fff">
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">U-6-1</div>
+              <div style="font-size:10px;color:var(--g400)">6평 · 19.8㎡</div>
+            </div>
+            <span class="chip chip-green" style="font-size:9px">12회 사용</span>
+          </div>
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">U-6-2</div>
+              <div style="font-size:10px;color:var(--g400)">6평 · 발코니형</div>
+            </div>
+            <span class="chip chip-green" style="font-size:9px">8회 사용</span>
+          </div>
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">U-9-1</div>
+              <div style="font-size:10px;color:var(--g400)">9평 · 29.7㎡</div>
+            </div>
+            <span class="chip chip-green" style="font-size:9px">6회 사용</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- T 타입 (12~21평) -->
+      <div style="border-radius:10px;border:2px solid var(--blue);overflow:hidden">
+        <div style="background:linear-gradient(135deg,var(--blue),var(--blue2));padding:10px 14px;color:#fff">
+          <div style="font-size:10px;font-weight:700;opacity:.8;letter-spacing:.06em">T-TYPE · 주력 제품군</div>
+          <div style="font-size:14px;font-weight:900">T 타입</div>
+          <div style="font-size:10px;opacity:.8">12평~21평 · 39.6~69.3㎡</div>
+        </div>
+        <div style="padding:10px;background:#fff">
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">T-12-1~3</div>
+              <div style="font-size:10px;color:var(--g400)">12평 · 39.6㎡ · 3종</div>
+            </div>
+            <span class="chip chip-blue" style="font-size:9px">21회</span>
+          </div>
+          <div class="lib-item lib-item-used" style="border-color:rgba(26,86,219,.3);background:rgba(26,86,219,.03)">
+            <div>
+              <div style="font-weight:700;font-size:11px;color:var(--blue)">T-15-1~5 ★</div>
+              <div style="font-size:10px;color:var(--g400)">15평 · 49.5㎡ · 5종</div>
+            </div>
+            <span class="chip chip-blue" style="font-size:9px">48회</span>
+          </div>
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">T-18-1~3</div>
+              <div style="font-size:10px;color:var(--g400)">18평 · 59.4㎡ · 3종</div>
+            </div>
+            <span class="chip chip-blue" style="font-size:9px">18회</span>
+          </div>
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">T-21-1~2</div>
+              <div style="font-size:10px;color:var(--g400)">21평 · 69.3㎡ · 2종</div>
+            </div>
+            <span class="chip chip-blue" style="font-size:9px">9회</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- S 타입 (15~18평) -->
+      <div style="border-radius:10px;border:1.5px solid var(--g200);overflow:hidden">
+        <div style="background:linear-gradient(135deg,var(--green),#34d399);padding:10px 14px;color:#fff">
+          <div style="font-size:10px;font-weight:700;opacity:.8;letter-spacing:.06em">S-TYPE</div>
+          <div style="font-size:14px;font-weight:900">S 타입</div>
+          <div style="font-size:10px;opacity:.8">15평~18평 · 49.5~59.4㎡</div>
+        </div>
+        <div style="padding:10px;background:#fff">
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">S-15-1</div>
+              <div style="font-size:10px;color:var(--g400)">15평 · 49.5㎡</div>
+            </div>
+            <span class="chip chip-green" style="font-size:9px">7회 사용</span>
+          </div>
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">S-18-1</div>
+              <div style="font-size:10px;color:var(--g400)">18평 · 59.4㎡</div>
+            </div>
+            <span class="chip chip-green" style="font-size:9px">4회 사용</span>
+          </div>
+          <div class="lib-item lib-item-new" style="margin-top:8px">
+            <div>
+              <div style="font-weight:700;font-size:11px;color:var(--blue)">S-NEW ✦</div>
+              <div style="font-size:10px;color:var(--g400)">신규 등록 대기</div>
+            </div>
+            <span class="chip chip-blue2" style="font-size:9px">신규</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- H 타입 (21~30평) -->
+      <div style="border-radius:10px;border:1.5px solid var(--g200);overflow:hidden">
+        <div style="background:linear-gradient(135deg,var(--purple),#a78bfa);padding:10px 14px;color:#fff">
+          <div style="font-size:10px;font-weight:700;opacity:.8;letter-spacing:.06em">H-TYPE · 대형</div>
+          <div style="font-size:14px;font-weight:900">H 타입</div>
+          <div style="font-size:10px;opacity:.8">21평~30평 · 69.3~99.0㎡</div>
+        </div>
+        <div style="padding:10px;background:#fff">
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">H-21-1~2</div>
+              <div style="font-size:10px;color:var(--g400)">21평 · 69.3㎡ · 2종</div>
+            </div>
+            <span class="chip chip-purple" style="font-size:9px">5회 사용</span>
+          </div>
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">H-24-1~2</div>
+              <div style="font-size:10px;color:var(--g400)">24평 · 79.2㎡ · 2종</div>
+            </div>
+            <span class="chip chip-purple" style="font-size:9px">3회 사용</span>
+          </div>
+          <div class="lib-item lib-item-used">
+            <div>
+              <div style="font-weight:700;font-size:11px">H-30-1</div>
+              <div style="font-size:10px;color:var(--g400)">30평 · 99.0㎡</div>
+            </div>
+            <span class="chip chip-purple" style="font-size:9px">2회 사용</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 이번 프로젝트 신규 등록 템플릿 + 재사용 이력 -->
+  <div class="grid-2">
+    <!-- 신규 등록 -->
+    <div class="card">
+      <div class="section-tag" style="margin-bottom:10px">NEW TEMPLATES</div>
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px">이번 프로젝트 신규 등록 BIM 객체 (5개)</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="asset-card asset-blue">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <span class="chip chip-blue" style="font-size:10px;margin-bottom:4px">BALCONY-3 · 중앙집중형</span>
+              <div style="font-size:13px;font-weight:800;margin-top:4px">면목동형 2동병렬 배치 BIM</div>
+              <div style="font-size:11px;color:var(--g400);margin-top:2px">618㎡ · T-15계열 · 32세대 · 5층</div>
+            </div>
+            <div style="background:rgba(26,86,219,.1);border-radius:8px;padding:8px 12px;text-align:center">
+              <div style="font-size:16px;font-weight:900;color:var(--blue)">NEW</div>
+              <div style="font-size:9px;color:var(--g400)">금회 생성</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <span class="prop-badge prop-badge-blue">IFC 4.0</span>
+            <span class="prop-badge prop-badge-blue">Revit RFA</span>
+            <span class="prop-badge prop-badge-green">CLT 구조</span>
+          </div>
+        </div>
+        <div class="asset-card asset-blue2">
+          <div style="font-size:13px;font-weight:800">T-15-2 발코니형 BIM 패밀리</div>
+          <div style="font-size:11px;color:var(--g400);margin-top:2px">44.7㎡ · BALCONY-3 모듈 · 표준 접합부 포함</div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <span class="prop-badge">발코니 6.8㎡</span>
+            <span class="prop-badge prop-badge-blue">유닛배스 포함</span>
+          </div>
+        </div>
+        <div class="asset-card asset-green">
+          <div style="font-size:13px;font-weight:800">중앙코어 2동 공용부 템플릿</div>
+          <div style="font-size:11px;color:var(--g400);margin-top:2px">계단실·엘리베이터 코어 · 13.2% 공용부 비율</div>
+        </div>
+        <div class="asset-card asset-purple">
+          <div style="font-size:13px;font-weight:800">JOINT-H01 수평접합 표준</div>
+          <div style="font-size:11px;color:var(--g400);margin-top:2px">M20×4 볼트·방수테이프·공차±3mm 접합 표준</div>
+        </div>
+        <div class="asset-card asset-orange">
+          <div style="font-size:13px;font-weight:800">JOINT-V01 수직접합 표준</div>
+          <div style="font-size:11px;color:var(--g400);margin-top:2px">전단키·방진패드 10mm·실링 적층 접합 표준</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 재사용 이력 + 누적 통계 -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="side-title">BIM 객체 재사용 이력 (최근 5건)</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--g50);border-radius:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700">면목동 612-6 <span style="color:var(--blue)">(현재)</span></div>
+              <div style="font-size:10px;color:var(--g400)">T-15계열 · 32세대 · BALCONY-3</div>
+            </div>
+            <span class="chip chip-blue" style="font-size:10px">진행 중</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--g50);border-radius:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700">노원구 상계동 PJ-11</div>
+              <div style="font-size:10px;color:var(--g400)">T-15계열 · 28세대 · 4층</div>
+            </div>
+            <span class="chip chip-green" style="font-size:10px">완료</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--g50);border-radius:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700">성북구 길음동 PJ-09</div>
+              <div style="font-size:10px;color:var(--g400)">T-12+T-15 혼합 · 24세대</div>
+            </div>
+            <span class="chip chip-green" style="font-size:10px">완료</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--g50);border-radius:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700">은평구 불광동 PJ-07</div>
+              <div style="font-size:10px;color:var(--g400)">T-18계열 · 20세대 · 5층</div>
+            </div>
+            <span class="chip chip-green" style="font-size:10px">완료</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--g50);border-radius:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700">마포구 합정동 PJ-05</div>
+              <div style="font-size:10px;color:var(--g400)">H-21+S-15 혼합 · 18세대</div>
+            </div>
+            <span class="chip chip-green" style="font-size:10px">완료</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BIM 효율 지표 -->
+      <div class="card">
+        <div class="side-title">BIM 라이브러리 누적 효율 지표</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:600">템플릿 재사용률</span>
+              <span style="font-size:11px;font-weight:700;color:var(--blue)">84%</span>
+            </div>
+            <div class="score-bar"><div class="score-fill" style="width:84%;background:var(--blue)"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:600">BIM 생성 자동화율</span>
+              <span style="font-size:11px;font-weight:700;color:var(--green)">92%</span>
+            </div>
+            <div class="score-bar"><div class="score-fill" style="width:92%;background:var(--green)"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:600">속성 완전성 (수량 정확도)</span>
+              <span style="font-size:11px;font-weight:700;color:var(--purple)">97%</span>
+            </div>
+            <div class="score-bar"><div class="score-fill" style="width:97%;background:var(--purple)"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;font-weight:600">평균 BIM 생성 시간 단축</span>
+              <span style="font-size:11px;font-weight:700;color:var(--amber)">-91%</span>
+            </div>
+            <div class="score-bar"><div class="score-fill" style="width:91%;background:var(--amber)"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px;background:rgba(26,86,219,.04);border-radius:8px;border-left:3px solid var(--blue)">
+          <div style="font-size:11px;color:var(--g600)">
+            라이브러리 누적으로 BIM 생성 시간이 <strong style="color:var(--blue)">기존 3일 → 6.1초</strong>로 단축.
+            T-15 계열이 전체의 <strong style="color:var(--blue)">48회 (38%)</strong>를 차지하는 핵심 모듈.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div class="msg-arrow">📚</div>
+    <div class="msg-text">
+      <div class="msg-label">LIBRARY UPDATE</div>
+      면목동 612-6 프로젝트로 <strong>5개 BIM 템플릿</strong>이 신규 등록되어 라이브러리가 38개로 확장되었습니다.
+      T-15-2 발코니형, 중앙코어 공용부, JOINT 표준 2종이 다음 프로젝트에서 즉시 재사용 가능합니다.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

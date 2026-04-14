@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1280" />
+<title>UnitBuild — 그룹 A. 사업지 검토</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+/* ── 디자인 토큰 ─────────────────────────────── */
+:root {
+  --navy:   #0a1628;
+  --blue:   #1a56db;
+  --blue2:  #3b82f6;
+  --teal:   #0ea5e9;
+  --green:  #10b981;
+  --orange: #f97316;
+  --purple: #8b5cf6;
+  --pink:   #ec4899;
+  --amber:  #f59e0b;
+  --red:    #ef4444;
+  --g50:    #f8fafc;
+  --g100:   #f1f5f9;
+  --g200:   #e2e8f0;
+  --g400:   #94a3b8;
+  --g600:   #475569;
+  --g900:   #0f172a;
+  --r:      14px;
+  --rx:     20px;
+  --sh:     0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --shh:    0 8px 30px rgba(26,86,219,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,-apple-system,sans-serif;background:var(--g50);color:var(--g900);-webkit-font-smoothing:antialiased}
+
+/* ── 탭 네비 ─────────────────────────────────── */
+.topbar{background:#fff;border-bottom:1px solid var(--g200);height:60px;display:flex;align-items:center;padding:0 32px;gap:8px;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:center;gap:8px;margin-right:24px}
+.logo-icon{width:34px;height:34px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.logo-text{font-weight:900;font-size:16px;color:var(--g900)}
+.logo-sub{font-size:10px;color:var(--g400)}
+.tab-btn{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--g600);transition:.15s;white-space:nowrap}
+.tab-btn:hover{background:var(--g100);color:var(--g900)}
+.tab-btn.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,.25)}
+.group-badge{margin-left:auto;padding:4px 14px;background:rgba(26,86,219,.08);color:var(--blue);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em}
+
+/* ── 화면 캔버스 ─────────────────────────────── */
+.screen{display:none;width:1280px;min-height:800px;padding:28px 32px 32px}
+.screen.active{display:block}
+
+/* ── 공통 카드 ──────────────────────────────── */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:20px;border:1px solid var(--g200)}
+.card-sm{background:#fff;border-radius:10px;box-shadow:var(--sh);padding:14px 16px;border:1px solid var(--g200)}
+.section-tag{display:inline-block;padding:3px 10px;background:rgba(26,86,219,.08);color:var(--blue);border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── 스크린 헤더 ────────────────────────────── */
+.screen-header{margin-bottom:22px}
+.screen-num{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.screen-title{font-size:22px;font-weight:900;color:var(--g900);line-height:1.25}
+.screen-desc{font-size:13px;color:var(--g400);margin-top:4px}
+
+/* ── 메시지 배너 ─────────────────────────────── */
+.msg-banner{margin-top:20px;background:linear-gradient(135deg,var(--navy) 0%,#0f2c5a 60%,#1a3a7a 100%);border-radius:12px;padding:14px 22px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.msg-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 50%,rgba(26,86,219,.3) 0%,transparent 60%),linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:auto,40px 40px,40px 40px}
+.msg-arrow{font-size:20px;background:rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;color:#fff;font-weight:900;white-space:nowrap;position:relative;z-index:1}
+.msg-text{color:rgba(255,255,255,.95);font-size:13px;font-weight:600;line-height:1.5;position:relative;z-index:1}
+.msg-label{font-size:10px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:2px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ── 점수 바 ─────────────────────────────────── */
+.score-bar{height:7px;border-radius:4px;background:var(--g200);overflow:hidden;margin-top:5px}
+.score-fill{height:100%;border-radius:4px;transition:width .6s}
+
+/* ── 그리드 헬퍼 ─────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.col-span-2{grid-column:span 2}
+
+/* ── 지도 목업 ──────────────────────────────── */
+.map-mock{background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 40%,#a5f3fc 100%);border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(99,102,241,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.1) 1px,transparent 1px);background-size:28px 28px}
+.map-road-h{position:absolute;left:0;right:0;height:10px;background:rgba(255,255,255,.7);border-radius:2px}
+.map-road-v{position:absolute;top:0;bottom:0;width:10px;background:rgba(255,255,255,.7);border-radius:2px}
+.map-pin{position:absolute;display:flex;flex-direction:column;align-items:center;gap:0}
+.pin-dot{width:22px;height:22px;background:var(--blue);border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(26,86,219,.4);display:flex;align-items:center;justify-content:center}
+.pin-tail{width:3px;height:10px;background:var(--blue);border-radius:0 0 2px 2px}
+.pin-label{background:var(--navy);color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:5px;margin-top:2px;white-space:nowrap}
+
+/* ── 태그 칩 ─────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.chip-blue{background:rgba(59,130,246,.1);color:#1d4ed8}
+.chip-green{background:rgba(16,185,129,.1);color:#047857}
+.chip-amber{background:rgba(245,158,11,.1);color:#b45309}
+.chip-red{background:rgba(239,68,68,.1);color:#b91c1c}
+.chip-purple{background:rgba(139,92,246,.1);color:#6d28d9}
+.chip-teal{background:rgba(14,165,233,.1);color:#0369a1}
+
+/* ── 리스트 아이템 ──────────────────────────── */
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--g100)}
+.list-row:last-child{border-bottom:none}
+.list-key{font-size:12px;color:var(--g600)}
+.list-val{font-size:12px;font-weight:700;color:var(--g900)}
+
+/* ── 등급 배지 ──────────────────────────────── */
+.grade{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-weight:900;font-size:14px}
+.grade-A{background:#dcfce7;color:#15803d;border:2px solid #15803d}
+.grade-B{background:#dbeafe;color:#1d4ed8;border:2px solid #1d4ed8}
+.grade-C{background:#fef9c3;color:#b45309;border:2px solid #b45309}
+.grade-X{background:#fee2e2;color:#b91c1c;border:2px solid #b91c1c}
+
+/* ── 플로우 화살표 ──────────────────────────── */
+.flow-arrow{display:flex;align-items:center;justify-content:center;color:var(--g400);font-size:18px;font-weight:300;padding:0 4px}
+
+/* ── 사이드바 섹션 타이틀 ────────────────────── */
+.side-title{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+
+/* ── 수치 강조 카드 ─────────────────────────── */
+.stat-box{text-align:center;padding:14px 10px}
+.stat-num{font-size:24px;font-weight:900;line-height:1}
+.stat-lbl{font-size:10px;color:var(--g400);margin-top:4px}
+
+/* ── 리스크 아이템 ──────────────────────────── */
+.risk-item{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:8px;margin-bottom:6px}
+.risk-high{background:#fef2f2;border-left:3px solid var(--red)}
+.risk-mid{background:#fffbeb;border-left:3px solid var(--amber)}
+.risk-low{background:#f0fdf4;border-left:3px solid var(--green)}
+
+/* ── 테이블 ─────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--g50);color:var(--g600);font-weight:700;padding:8px 12px;text-align:left;border-bottom:2px solid var(--g200)}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--g100);color:var(--g900)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--g50)}
+
+/* ── 진행 스텝 ──────────────────────────────── */
+.step-flow{display:flex;align-items:center;gap:0}
+.step-node{display:flex;flex-direction:column;align-items:center;gap:4px}
+.step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.step-line-h{flex:1;height:2px;background:linear-gradient(90deg,var(--blue),var(--teal));min-width:24px}
+
+/* ── 축적 패턴 카드 ─────────────────────────── */
+.accum-card{border-radius:10px;padding:14px;border:1px solid var(--g200);background:#fff;position:relative;overflow:hidden}
+.accum-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.accum-pub::after{background:var(--blue)}
+.accum-prv::after{background:var(--teal)}
+.accum-reuse::after{background:var(--green)}
+
+/* ── 스크롤바 ────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ══ 탑바 ══════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">UnitBuild</div>
+      <div class="logo-sub">모듈러 사업지 자동평가</div>
+    </div>
+  </div>
+
+  <button class="tab-btn active" onclick="showTab(0)">① 후보 사업지 정보 입력</button>
+  <button class="tab-btn" onclick="showTab(1)">② 사업지 적합도 평가</button>
+  <button class="tab-btn" onclick="showTab(2)">③ 설계조건표 생성</button>
+  <button class="tab-btn" onclick="showTab(3)">④ 평가기준 축적</button>
+
+  <div class="group-badge">🗂️ 그룹 A — 사업지 검토</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #15 — 후보 사업지 정보 및 법규조건 입력
+════════════════════════════════════════════════════════════ -->
+<div class="screen active" id="s0">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #15 · 그룹 A — 사업지 검토</div>
+    <div class="screen-title">후보 사업지 정보 및 법규조건 입력 화면</div>
+    <div class="screen-desc">후보 사업지를 비교·평가 가능한 구조화 데이터로 전환하는 입력 인터페이스</div>
+  </div>
+
+  <!-- 메인 레이아웃: 좌(목록+지도) | 우(법규 속성) -->
+  <div style="display:grid;grid-template-columns:420px 1fr;gap:16px;align-items:start">
+
+    <!-- ── 좌: 후보 사업지 목록 + 지도 ── -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 검색 입력 -->
+      <div class="card" style="padding:14px 16px">
+        <div class="side-title">사업지 검색</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="flex:1;background:var(--g50);border:1.5px solid var(--g200);border-radius:9px;padding:9px 14px;font-size:13px;color:var(--g400)">
+            📍 서울특별시 중랑구 면목동 612-6
+          </div>
+          <div style="background:var(--blue);color:#fff;border-radius:9px;padding:9px 16px;font-size:12px;font-weight:700;white-space:nowrap">검색</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          <span class="chip chip-blue">전체 6개</span>
+          <span class="chip chip-green">검토완료 4</span>
+          <span class="chip chip-amber">미완료 2</span>
+        </div>
+      </div>
+
+      <!-- 후보 사업지 목록 -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">후보 사업지 목록</span>
+          <span class="chip chip-blue">6개 후보</span>
+        </div>
+        <!-- 사업지 리스트 -->
+        <div id="site-list">
+          <!-- 선택됨 -->
+          <div style="padding:12px 16px;background:rgba(59,130,246,.06);border-left:3px solid var(--blue);cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:12px;font-weight:800;color:var(--blue)">중랑구 면목동 612-6</span>
+              <span class="grade grade-A" style="width:24px;height:24px;font-size:11px">A</span>
+            </div>
+            <div style="font-size:11px;color:var(--g600)">제2종일반주거 · 건폐율 60% · 용적률 250%</div>
+            <div style="display:flex;gap:5px;margin-top:5px"><span class="chip chip-blue" style="font-size:10px">618㎡</span><span class="chip chip-green" style="font-size:10px">검토완료</span></div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid var(--g100);cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:12px;font-weight:700;color:var(--g900)">양천구 신월동 104-26</span>
+              <span class="grade grade-A" style="width:24px;height:24px;font-size:11px">A</span>
+            </div>
+            <div style="font-size:11px;color:var(--g600)">제1종일반주거 · 건폐율 50% · 용적률 200%</div>
+            <div style="display:flex;gap:5px;margin-top:5px"><span class="chip chip-blue" style="font-size:10px">540㎡</span><span class="chip chip-green" style="font-size:10px">검토완료</span></div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid var(--g100);cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:12px;font-weight:700;color:var(--g900)">노원구 상계동 291-5</span>
+              <span class="grade grade-B" style="width:24px;height:24px;font-size:11px">B</span>
+            </div>
+            <div style="font-size:11px;color:var(--g600)">준주거 · 건폐율 60% · 용적률 300%</div>
+            <div style="display:flex;gap:5px;margin-top:5px"><span class="chip chip-blue" style="font-size:10px">720㎡</span><span class="chip chip-amber" style="font-size:10px">검토중</span></div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid var(--g100);cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:12px;font-weight:700;color:var(--g900)">도봉구 방학동 558-3</span>
+              <span class="grade grade-C" style="width:24px;height:24px;font-size:11px">C</span>
+            </div>
+            <div style="font-size:11px;color:var(--g600)">제2종일반주거 · 건폐율 60% · 용적률 200%</div>
+            <div style="display:flex;gap:5px;margin-top:5px"><span class="chip chip-blue" style="font-size:10px">482㎡</span><span class="chip chip-green" style="font-size:10px">검토완료</span></div>
+          </div>
+          <div style="padding:12px 16px;cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:12px;font-weight:700;color:var(--g900)">강북구 번동 440-12</span>
+              <span style="background:var(--g100);color:var(--g400);width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">-</span>
+            </div>
+            <div style="font-size:11px;color:var(--g600)">제1종일반주거 · 미분류</div>
+            <div style="display:flex;gap:5px;margin-top:5px"><span class="chip chip-blue" style="font-size:10px">390㎡</span><span class="chip chip-red" style="font-size:10px">미완료</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 미니 지도 목업 -->
+      <div class="card" style="padding:14px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:12px;font-weight:700;color:var(--g900)">📍 위치 지도</span>
+          <span class="chip chip-teal">VWorld 연동</span>
+        </div>
+        <div class="map-mock" style="height:160px;border-radius:8px">
+          <div class="map-grid"></div>
+          <div class="map-road-h" style="top:50%;transform:translateY(-50%)"></div>
+          <div class="map-road-v" style="left:40%;transform:translateX(-50%)"></div>
+          <!-- 핀들 -->
+          <div class="map-pin" style="top:28%;left:38%">
+            <div class="pin-dot" style="background:var(--blue)"><svg viewBox="0 0 12 12" width="10" height="10" fill="#fff"><circle cx="6" cy="6" r="3"/></svg></div>
+            <div class="pin-tail"></div>
+            <div class="pin-label" style="background:var(--blue)">면목동</div>
+          </div>
+          <div class="map-pin" style="top:55%;left:25%">
+            <div class="pin-dot" style="background:var(--green);border-color:#fff"><svg viewBox="0 0 12 12" width="10" height="10" fill="#fff"><circle cx="6" cy="6" r="3"/></svg></div>
+            <div class="pin-tail" style="background:var(--green)"></div>
+            <div class="pin-label" style="background:var(--green)">신월동</div>
+          </div>
+          <div class="map-pin" style="top:20%;left:65%">
+            <div class="pin-dot" style="background:var(--amber);border-color:#fff"></div>
+            <div class="pin-tail" style="background:var(--amber)"></div>
+            <div class="pin-label" style="background:var(--amber)">상계동</div>
+          </div>
+          <div style="position:absolute;bottom:8px;right:8px;background:rgba(255,255,255,.85);border-radius:5px;padding:3px 7px;font-size:9px;font-weight:600;color:var(--g600)">서울 북부 권역</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 우: 대지면적·법규 속성 ── -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 선택 사업지 헤더 -->
+      <div style="background:linear-gradient(135deg,var(--blue) 0%,#1e40af 100%);border-radius:var(--r);padding:18px 22px;color:#fff">
+        <div style="font-size:10px;opacity:.7;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">선택된 사업지</div>
+        <div style="font-size:18px;font-weight:900;margin-bottom:2px">서울특별시 중랑구 면목동 612-6</div>
+        <div style="font-size:12px;opacity:.8;margin-bottom:14px">PNU: 1126010100106120006 · 카카오맵 실데이터 기반</div>
+        <div style="display:flex;gap:16px">
+          <div style="text-align:center"><div style="font-size:22px;font-weight:900">618</div><div style="font-size:10px;opacity:.7">대지면적 (㎡)</div></div>
+          <div style="width:1px;background:rgba(255,255,255,.2)"></div>
+          <div style="text-align:center"><div style="font-size:22px;font-weight:900">5층</div><div style="font-size:10px;opacity:.7">최고 허용층수</div></div>
+          <div style="width:1px;background:rgba(255,255,255,.2)"></div>
+          <div style="text-align:center"><div style="font-size:22px;font-weight:900">32</div><div style="font-size:10px;opacity:.7">추천 세대수</div></div>
+          <div style="width:1px;background:rgba(255,255,255,.2)"></div>
+          <div style="text-align:center"><div style="font-size:22px;font-weight:900;color:#86efac">A</div><div style="font-size:10px;opacity:.7">SITE-C 등급</div></div>
+        </div>
+      </div>
+
+      <!-- 속성 2컬럼 -->
+      <div class="grid-2">
+        <!-- 대지 형상 -->
+        <div class="card">
+          <div class="side-title" style="margin-bottom:10px">대지 정보</div>
+          <div class="list-row"><span class="list-key">대지면적</span><span class="list-val">618.0 ㎡</span></div>
+          <div class="list-row"><span class="list-key">지목</span><span class="list-val">대 (垈)</span></div>
+          <div class="list-row"><span class="list-key">형상</span><span class="list-val">사각형 (장방형)</span></div>
+          <div class="list-row"><span class="list-key">접도 조건</span><span class="list-val">남측 8m 도로 접함</span></div>
+          <div class="list-row"><span class="list-key">경사도</span><span class="list-val">2.1° (평지)</span></div>
+          <div class="list-row"><span class="list-key">좌표</span><span class="list-val">37.571°N / 127.073°E</span></div>
+        </div>
+
+        <!-- 용도지역 -->
+        <div class="card">
+          <div class="side-title" style="margin-bottom:10px">용도지역 · 건축제한</div>
+          <div class="list-row"><span class="list-key">용도지역</span><span class="list-val" style="color:var(--blue);font-weight:800">제2종일반주거</span></div>
+          <div class="list-row"><span class="list-key">용도지구</span><span class="list-val">지정없음</span></div>
+          <div class="list-row">
+            <span class="list-key">건폐율 (한도)</span>
+            <div>
+              <div style="display:flex;justify-content:space-between"><span class="list-val">60%</span><span style="font-size:11px;color:var(--green);font-weight:600">사용 40%</span></div>
+              <div class="score-bar" style="width:120px"><div class="score-fill" style="width:40%;background:var(--blue)"></div></div>
+            </div>
+          </div>
+          <div class="list-row">
+            <span class="list-key">용적률 (한도)</span>
+            <div>
+              <div style="display:flex;justify-content:space-between"><span class="list-val">250%</span><span style="font-size:11px;color:var(--green);font-weight:600">사용 195%</span></div>
+              <div class="score-bar" style="width:120px"><div class="score-fill" style="width:78%;background:var(--teal)"></div></div>
+            </div>
+          </div>
+          <div class="list-row"><span class="list-key">최고층수</span><span class="list-val">5층 이하</span></div>
+          <div class="list-row"><span class="list-key">최저층수</span><span class="list-val">제한없음</span></div>
+        </div>
+      </div>
+
+      <!-- 인허가 제약조건 -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="side-title" style="margin-bottom:0">인허가 제약조건 체크리스트</div>
+          <span class="chip chip-green">✓ 3개 적합 · 주의 1개</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:12px;text-align:center">
+            <div style="font-size:18px;margin-bottom:4px">✅</div>
+            <div style="font-size:11px;font-weight:700;color:#15803d">위해시설</div>
+            <div style="font-size:10px;color:#166534;margin-top:2px">이격거리 적합</div>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:12px;text-align:center">
+            <div style="font-size:18px;margin-bottom:4px">✅</div>
+            <div style="font-size:11px;font-weight:700;color:#15803d">문화재 보호구역</div>
+            <div style="font-size:10px;color:#166534;margin-top:2px">해당없음</div>
+          </div>
+          <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:9px;padding:12px;text-align:center">
+            <div style="font-size:18px;margin-bottom:4px">⚠️</div>
+            <div style="font-size:11px;font-weight:700;color:#b45309">일조권 사선</div>
+            <div style="font-size:10px;color:#92400e;margin-top:2px">북측 이격 필요</div>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:12px;text-align:center">
+            <div style="font-size:18px;margin-bottom:4px">✅</div>
+            <div style="font-size:11px;font-weight:700;color:#15803d">도로사선제한</div>
+            <div style="font-size:10px;color:#166534;margin-top:2px">8m 도로 적합</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단: 주요 제약조건 요약 -->
+      <div style="background:var(--g50);border:1.5px dashed var(--g200);border-radius:12px;padding:16px 20px">
+        <div style="font-size:11px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">📋 주요 제약조건 요약 · 검토 필요 항목</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;border:1px solid var(--g200)">
+            <div style="font-size:10px;color:var(--g400);margin-bottom:3px">최적 모듈 타입</div>
+            <div style="font-size:13px;font-weight:800;color:var(--blue)">BALCONY-3</div>
+            <div style="font-size:10px;color:var(--g600);margin-top:2px">3,200 × 8,100 mm</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;border:1px solid var(--g200)">
+            <div style="font-size:10px;color:var(--g400);margin-bottom:3px">북측 이격거리</div>
+            <div style="font-size:13px;font-weight:800;color:var(--amber)">1.5H 확보 필요</div>
+            <div style="font-size:10px;color:var(--g600);margin-top:2px">설계 반영 요망</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;border:1px solid var(--g200)">
+            <div style="font-size:10px;color:var(--g400);margin-bottom:3px">다음 검토 단계</div>
+            <div style="font-size:13px;font-weight:800;color:var(--green)">적합도 평가 →</div>
+            <div style="font-size:10px;color:var(--g600);margin-top:2px">SITE-C 채점 진행</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 전달 메시지 배너 -->
+  <div class="msg-banner">
+    <div>
+      <div class="msg-label">전달 메시지</div>
+      <div class="msg-arrow">메모 → 구조화 데이터</div>
+    </div>
+    <div class="msg-text">후보 사업지 정보를 단순 메모가 아니라 <strong>비교·평가 가능한 구조화 데이터</strong>로 전환한다는 점을 보여줌<br>대지면적·형상·접도·용도지역·건폐율·용적률·인허가 제약 → 표준화된 필드로 자동 변환</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #16 — 사업지 적합도 평가 및 리스크 분석
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s1">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #16 · 그룹 A — 사업지 검토</div>
+    <div class="screen-title">사업지 적합도 평가 및 리스크 분석 화면</div>
+    <div class="screen-desc">경험 기반 수작업 판단이 아닌, 평가 기준에 따라 비교 가능한 정량 검토 체계</div>
+  </div>
+
+  <!-- 상단: 사업지별 적합도 요약 카드 -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
+    <!-- 카드 1 -->
+    <div style="background:#fff;border-radius:var(--r);border:2px solid var(--blue);box-shadow:0 4px 16px rgba(26,86,219,.12);padding:16px;text-align:center;position:relative">
+      <div style="position:absolute;top:8px;right:8px;background:var(--blue);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px">선택</div>
+      <div class="grade grade-A" style="margin:0 auto 8px">A</div>
+      <div style="font-size:11px;font-weight:800;color:var(--g900)">면목동 612</div>
+      <div style="font-size:22px;font-weight:900;color:var(--blue);margin:4px 0">82.4</div>
+      <div style="font-size:10px;color:var(--g400)">SITE-C 점수</div>
+      <div style="font-size:10px;color:var(--green);font-weight:600;margin-top:4px">심의통과 90%+</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div class="grade grade-A" style="margin:0 auto 8px">A</div>
+      <div style="font-size:11px;font-weight:800;color:var(--g900)">신월동 104</div>
+      <div style="font-size:22px;font-weight:900;color:var(--blue);margin:4px 0">78.1</div>
+      <div style="font-size:10px;color:var(--g400)">SITE-C 점수</div>
+      <div style="font-size:10px;color:var(--blue);font-weight:600;margin-top:4px">심의통과 75%</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div class="grade grade-B" style="margin:0 auto 8px">B</div>
+      <div style="font-size:11px;font-weight:800;color:var(--g900)">상계동 291</div>
+      <div style="font-size:22px;font-weight:900;color:#1d4ed8;margin:4px 0">71.3</div>
+      <div style="font-size:10px;color:var(--g400)">SITE-C 점수</div>
+      <div style="font-size:10px;color:var(--blue);font-weight:600;margin-top:4px">심의통과 75%</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div class="grade grade-C" style="margin:0 auto 8px">C</div>
+      <div style="font-size:11px;font-weight:800;color:var(--g900)">방학동 558</div>
+      <div style="font-size:22px;font-weight:900;color:var(--amber);margin:4px 0">58.7</div>
+      <div style="font-size:10px;color:var(--g400)">SITE-C 점수</div>
+      <div style="font-size:10px;color:var(--amber);font-weight:600;margin-top:4px">심의통과 50%</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div class="grade grade-X" style="margin:0 auto 8px">X</div>
+      <div style="font-size:11px;font-weight:800;color:var(--g900)">번동 440</div>
+      <div style="font-size:22px;font-weight:900;color:var(--red);margin:4px 0">44.2</div>
+      <div style="font-size:10px;color:var(--g400)">SITE-C 점수</div>
+      <div style="font-size:10px;color:var(--red);font-weight:600;margin-top:4px">심의통과 10%</div>
+    </div>
+  </div>
+
+  <!-- 중단: 항목별 점수 + 리스크 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+    <!-- 항목별 점수 -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="side-title" style="margin-bottom:0">면목동 612-6 · 항목별 평가 점수</div>
+        <span class="chip chip-blue">총점 82.4점</span>
+      </div>
+
+      <!-- SITE-C 6개 항목 -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--g900)">A. 교통 접근성</span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;font-weight:800;color:#3b82f6">23.5</span><span style="font-size:10px;color:var(--g400)">/ 25</span></div>
+          </div>
+          <div class="score-bar"><div class="score-fill" style="width:94%;background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div></div>
+          <div style="font-size:10px;color:var(--g600);margin-top:3px">지하철 350m · 버스 2개소 · CBD 8.2km</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--g900)">B. 생활 인프라</span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;font-weight:800;color:#10b981">17.2</span><span style="font-size:10px;color:var(--g400)">/ 20</span></div>
+          </div>
+          <div class="score-bar"><div class="score-fill" style="width:86%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div>
+          <div style="font-size:10px;color:var(--g600);margin-top:3px">초교 280m · 병원 420m · 편의시설 4개소</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--g900)">C. 사업 규모</span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;font-weight:800;color:#8b5cf6">18.0</span><span style="font-size:10px;color:var(--g400)">/ 20</span></div>
+          </div>
+          <div class="score-bar"><div class="score-fill" style="width:90%;background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div></div>
+          <div style="font-size:10px;color:var(--g600);margin-top:3px">618㎡ · 32세대 계획 · 소형비율 85%</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--g900)">D. 구조·안전</span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;font-weight:800;color:#f59e0b">12.8</span><span style="font-size:10px;color:var(--g400)">/ 15</span></div>
+          </div>
+          <div class="score-bar"><div class="score-fill" style="width:85%;background:linear-gradient(90deg,#f59e0b,#fcd34d)"></div></div>
+          <div style="font-size:10px;color:var(--g600);margin-top:3px">내진 1등급 · 경사도 2.1° · 위해시설 OK</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--g900)">E. 에너지·환경</span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;font-weight:800;color:#06b6d4">7.4</span><span style="font-size:10px;color:var(--g400)">/ 10</span></div>
+          </div>
+          <div class="score-bar"><div class="score-fill" style="width:74%;background:linear-gradient(90deg,#06b6d4,#38bdf8)"></div></div>
+          <div style="font-size:10px;color:var(--g600);margin-top:3px">에너지 2등급 · 일조 4.1h/일</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--g900)">F. 사업자 가점</span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;font-weight:800;color:#ec4899">3.5</span><span style="font-size:10px;color:var(--g400)">/ 10</span></div>
+          </div>
+          <div class="score-bar"><div class="score-fill" style="width:35%;background:linear-gradient(90deg,#ec4899,#f9a8d4)"></div></div>
+          <div style="font-size:10px;color:var(--g600);margin-top:3px">모듈러 공법 ✓ · LH 인증 미완료</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 리스크 분석 -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="side-title" style="margin-bottom:0">리스크 항목 · 우선 검토 사유</div>
+        <div style="display:flex;gap:6px">
+          <span class="chip chip-red">고위험 1</span>
+          <span class="chip chip-amber">중위험 2</span>
+          <span class="chip chip-green">저위험 3</span>
+        </div>
+      </div>
+
+      <!-- 5개 사업지 비교표 -->
+      <div style="margin-bottom:14px">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>사업지</th>
+              <th>법규</th>
+              <th>입지</th>
+              <th>수요</th>
+              <th>사업성</th>
+              <th>종합</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:rgba(59,130,246,.04)">
+              <td style="font-weight:700;color:var(--blue)">면목동 612</td>
+              <td><span class="chip chip-green" style="font-size:10px">92</span></td>
+              <td><span class="chip chip-green" style="font-size:10px">88</span></td>
+              <td><span class="chip chip-green" style="font-size:10px">85</span></td>
+              <td><span class="chip chip-blue" style="font-size:10px">79</span></td>
+              <td style="font-weight:800;color:var(--blue)">82.4</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600">신월동 104</td>
+              <td><span class="chip chip-green" style="font-size:10px">88</span></td>
+              <td><span class="chip chip-blue" style="font-size:10px">80</span></td>
+              <td><span class="chip chip-blue" style="font-size:10px">76</span></td>
+              <td><span class="chip chip-blue" style="font-size:10px">74</span></td>
+              <td style="font-weight:700">78.1</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600">상계동 291</td>
+              <td><span class="chip chip-blue" style="font-size:10px">75</span></td>
+              <td><span class="chip chip-blue" style="font-size:10px">72</span></td>
+              <td><span class="chip chip-amber" style="font-size:10px">68</span></td>
+              <td><span class="chip chip-blue" style="font-size:10px">70</span></td>
+              <td style="font-weight:700">71.3</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600">방학동 558</td>
+              <td><span class="chip chip-amber" style="font-size:10px">62</span></td>
+              <td><span class="chip chip-amber" style="font-size:10px">58</span></td>
+              <td><span class="chip chip-amber" style="font-size:10px">55</span></td>
+              <td><span class="chip chip-amber" style="font-size:10px">60</span></td>
+              <td style="font-weight:700;color:var(--amber)">58.7</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600">번동 440</td>
+              <td><span class="chip chip-red" style="font-size:10px">48</span></td>
+              <td><span class="chip chip-red" style="font-size:10px">42</span></td>
+              <td><span class="chip chip-red" style="font-size:10px">44</span></td>
+              <td><span class="chip chip-red" style="font-size:10px">43</span></td>
+              <td style="font-weight:700;color:var(--red)">44.2</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 리스크 목록 -->
+      <div class="side-title" style="margin-bottom:8px">면목동 612 · 리스크 상세</div>
+      <div class="risk-item risk-mid">
+        <span style="font-size:14px">⚠️</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#92400e">일조권 사선제한 — 북측 이격 필요</div>
+          <div style="font-size:10px;color:var(--g600);margin-top:2px">5층 계획 시 북측 인접지 이격거리 1.5H 확보 설계 반영 필요</div>
+        </div>
+      </div>
+      <div class="risk-item risk-low">
+        <span style="font-size:14px">ℹ️</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#166534">F항목 사업자 가점 부족 — LH 인증 보완</div>
+          <div style="font-size:10px;color:var(--g600);margin-top:2px">LH 인증 취득 시 가점 +4점 추가 가능 → A+ 등급 달성 가능</div>
+        </div>
+      </div>
+      <div class="risk-item risk-low">
+        <span style="font-size:14px">✅</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#166534">위해시설 이격거리 전항목 적합</div>
+          <div style="font-size:10px;color:var(--g600);margin-top:2px">주유소 82m · 고압선 없음 · 유해업소 240m 이격 확인</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 우선 검토 순위 요약 -->
+  <div style="background:var(--g50);border:1.5px dashed var(--g200);border-radius:12px;padding:14px 20px">
+    <div style="font-size:11px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">🎯 우선 검토 순위 · 추천 사유</div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;background:#fff;border-radius:8px;padding:10px 14px;border-left:4px solid var(--blue);border:1px solid var(--g200);border-left:4px solid var(--blue)">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:2px">1순위</div>
+        <div style="font-size:13px;font-weight:800;color:var(--blue)">면목동 612-6 · 82.4점</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:2px">교통·인프라 최고 / 리스크 최소 / 즉시 설계 진행 가능</div>
+      </div>
+      <div style="flex:1;background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--g200);border-left:4px solid var(--teal)">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:2px">2순위</div>
+        <div style="font-size:13px;font-weight:800;color:var(--g900)">신월동 104-26 · 78.1점</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:2px">법규 적합 / 면적 여유 / LH 가점 보완 시 A등급</div>
+      </div>
+      <div style="flex:1;background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--g200);border-left:4px solid var(--amber)">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:2px">3순위 (조건부)</div>
+        <div style="font-size:13px;font-weight:800;color:var(--g900)">상계동 291-5 · 71.3점</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:2px">수요 개선 필요 / 준주거 용도 활용 시 용적률 유리</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div>
+      <div class="msg-label">전달 메시지</div>
+      <div class="msg-arrow">수작업 → 비교 체계</div>
+    </div>
+    <div class="msg-text">사업지 판단이 <strong>경험 기반 수작업이 아니라</strong> 법규·입지·수요·사업성 평가 기준에 따라 <strong>비교 가능한 정량 검토 체계</strong>임을 보여줌<br>5개 후보를 동일 기준으로 채점 → 1·2·3순위 자동 산출 → 근거 있는 의사결정</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #17 — 설계조건표 및 제약조건 생성
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s2">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #17 · 그룹 A — 사업지 검토</div>
+    <div class="screen-title">설계조건표 및 제약조건 생성 화면</div>
+    <div class="screen-desc">사업지 판단 결과가 문서로 끝나는 것이 아니라 다음 단계 설계 입력값으로 직접 연결</div>
+  </div>
+
+  <!-- 플로우: 사업지 선택 → 설계조건표 → 제약조건표 → 초기 프로그램 -->
+  <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;background:#fff;border-radius:var(--r);padding:16px 24px;border:1px solid var(--g200);box-shadow:var(--sh)">
+    <div style="flex:1;text-align:center">
+      <div style="width:44px;height:44px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg viewBox="0 0 20 20" width="20" height="20" fill="#fff"><path d="M10 2C6 2 3 5 3 9s7 11 7 11 7-7 7-11S14 2 10 2zm0 5.5A2.5 2.5 0 1 1 10 12a2.5 2.5 0 0 1 0-4.5z"/></svg></div>
+      <div style="font-size:11px;font-weight:800;color:var(--blue)">①  우선 사업지 확정</div>
+      <div style="font-size:10px;color:var(--g400);margin-top:2px">면목동 612-6 · 82.4점 · A등급</div>
+    </div>
+    <div style="width:48px;height:2px;background:linear-gradient(90deg,var(--blue),var(--teal))"></div>
+    <div style="flex:1;text-align:center">
+      <div style="width:44px;height:44px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg viewBox="0 0 20 20" width="20" height="20" fill="#fff"><path d="M4 4h12v2H4V4zm0 4h12v2H4V8zm0 4h8v2H4v-2z"/></svg></div>
+      <div style="font-size:11px;font-weight:800;color:#0369a1">②  설계조건표 생성</div>
+      <div style="font-size:10px;color:var(--g400);margin-top:2px">법규·모듈 조건 자동 변환</div>
+    </div>
+    <div style="width:48px;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple))"></div>
+    <div style="flex:1;text-align:center">
+      <div style="width:44px;height:44px;background:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg viewBox="0 0 20 20" width="20" height="20" fill="#fff"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 11H9V9h2v4zm0-6H9V5h2v2z"/></svg></div>
+      <div style="font-size:11px;font-weight:800;color:#6d28d9">③  제약조건 정의</div>
+      <div style="font-size:10px;color:var(--g400);margin-top:2px">리스크 항목 → 설계 제약</div>
+    </div>
+    <div style="width:48px;height:2px;background:linear-gradient(90deg,var(--purple),var(--green))"></div>
+    <div style="flex:1;text-align:center">
+      <div style="width:44px;height:44px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg viewBox="0 0 20 20" width="20" height="20" fill="#fff"><path d="M3 10h14M10 3l7 7-7 7"/></svg></div>
+      <div style="font-size:11px;font-weight:800;color:#047857">④  설계 단계 입력</div>
+      <div style="font-size:10px;color:var(--g400);margin-top:2px">기획설계 자동 생성 연결</div>
+    </div>
+  </div>
+
+  <!-- 2컬럼: 설계조건표 | 제약조건표 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+    <!-- 설계조건표 -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <div class="side-title" style="margin-bottom:3px">설계 조건표 (Design Criteria)</div>
+          <div style="font-size:12px;font-weight:700;color:var(--g900)">중랑구 면목동 612-6</div>
+        </div>
+        <span class="chip chip-green">자동생성 ✓</span>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>항목</th><th>조건</th><th>근거</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600">대지면적</td><td>618.0 ㎡</td><td style="color:var(--g400)">VWorld 실측</td></tr>
+          <tr><td style="font-weight:600">건폐율</td><td>최대 60%</td><td style="color:var(--g400)">제2종일반주거</td></tr>
+          <tr><td style="font-weight:600">용적률</td><td>최대 250%</td><td style="color:var(--g400)">제2종일반주거</td></tr>
+          <tr><td style="font-weight:600">최고층수</td><td>지상 5층</td><td style="color:var(--g400)">법규 + 일조검토</td></tr>
+          <tr><td style="font-weight:600">모듈 타입</td><td style="color:var(--blue);font-weight:700">BALCONY-3</td><td style="color:var(--g400)">면적 최적</td></tr>
+          <tr><td style="font-weight:600">계획 세대수</td><td>30~34세대</td><td style="color:var(--g400)">수요예측 결과</td></tr>
+          <tr><td style="font-weight:600">소형주택 비율</td><td>85% 이상</td><td style="color:var(--g400)">LH 기준</td></tr>
+          <tr><td style="font-weight:600">주차대수</td><td>세대당 0.6대</td><td style="color:var(--g400)">주차조례</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 제약조건표 -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <div class="side-title" style="margin-bottom:3px">제약 조건표 (Constraints)</div>
+          <div style="font-size:12px;font-weight:700;color:var(--g900)">리스크 → 설계 반영</div>
+        </div>
+        <span class="chip chip-amber">주의사항 2건</span>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>제약항목</th><th>상세 조건</th><th>중요도</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600">북측 이격</td>
+            <td>1.5H 이상 확보</td>
+            <td><span class="chip chip-amber" style="font-size:10px">필수</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">일조시간</td>
+            <td>동지 기준 2시간↑</td>
+            <td><span class="chip chip-amber" style="font-size:10px">필수</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">접도 이격</td>
+            <td>남측 도로 경계 1m</td>
+            <td><span class="chip chip-blue" style="font-size:10px">권고</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">LH 인허가</td>
+            <td>사전 협의 필요</td>
+            <td><span class="chip chip-blue" style="font-size:10px">권고</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">내진 설계</td>
+            <td>1등급 (SQ-Pipe)</td>
+            <td><span class="chip chip-green" style="font-size:10px">충족</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:600">에너지 등급</td>
+            <td>2등급 이상</td>
+            <td><span class="chip chip-green" style="font-size:10px">충족</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 하단: 초기 프로그램 조건 요약 -->
+  <div class="card" style="background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:1px solid #bae6fd">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="side-title" style="margin-bottom:0;color:#0369a1">초기 프로그램 조건 — 기획설계 입력값</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="chip chip-teal">다음단계 연결 준비완료</span>
+        <div style="background:var(--blue);color:#fff;border-radius:8px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer">기획설계 생성 →</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+      <div style="background:#fff;border-radius:9px;padding:12px;text-align:center;border:1px solid #bae6fd">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:4px">사업 유형</div>
+        <div style="font-size:14px;font-weight:900;color:var(--blue)">LH 신축매입</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:2px">공공임대형</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:12px;text-align:center;border:1px solid #bae6fd">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:4px">모듈 타입</div>
+        <div style="font-size:14px;font-weight:900;color:var(--blue)">BALCONY-3</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:2px">3.2×8.1m</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:12px;text-align:center;border:1px solid #bae6fd">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:4px">목표 세대수</div>
+        <div style="font-size:14px;font-weight:900;color:var(--teal)">32세대</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:2px">소형 85%</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:12px;text-align:center;border:1px solid #bae6fd">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:4px">층수 계획</div>
+        <div style="font-size:14px;font-weight:900;color:var(--purple)">5층</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:2px">북측 이격 반영</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:12px;text-align:center;border:1px solid #bae6fd">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:4px">사업성 예측</div>
+        <div style="font-size:14px;font-weight:900;color:var(--green)">ROI 12.4%</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:2px">수익 4.2억</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div>
+      <div class="msg-label">전달 메시지</div>
+      <div class="msg-arrow">판단 → 설계 입력</div>
+    </div>
+    <div class="msg-text">사업지 판단 결과가 <strong>문서로 끝나는 것이 아니라</strong> 다음 단계 설계 입력값으로 <strong>직접 연결</strong>된다는 점을 보여줌<br>설계조건표 + 제약조건표 → 초기 프로그램 → 기획설계 자동생성 → 단절 없는 워크플로우</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #18 — 사업지 평가 기준 축적 및 유형별 판단체계
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s3">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #18 · 그룹 A — 사업지 검토</div>
+    <div class="screen-title">사업지 평가 기준 축적 및 유형별 판단체계 화면</div>
+    <div class="screen-desc">반복 적용될수록 사업지 판단 로직이 고도화되는 누적 학습 구조</div>
+  </div>
+
+  <!-- 상단: 누적 현황 요약 -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+    <div class="card" style="text-align:center;padding:20px 16px">
+      <div style="font-size:32px;font-weight:900;color:var(--blue);line-height:1">47</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:6px">총 평가 사업지</div>
+      <div style="font-size:10px;color:var(--green);font-weight:600;margin-top:3px">+12 이번 달</div>
+    </div>
+    <div class="card" style="text-align:center;padding:20px 16px">
+      <div style="font-size:32px;font-weight:900;color:var(--teal);line-height:1">23</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:6px">공공형 (LH) 사업지</div>
+      <div style="font-size:10px;color:var(--teal);font-weight:600;margin-top:3px">A등급 18건</div>
+    </div>
+    <div class="card" style="text-align:center;padding:20px 16px">
+      <div style="font-size:32px;font-weight:900;color:var(--purple);line-height:1">24</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:6px">민간형 사업지</div>
+      <div style="font-size:10px;color:var(--purple);font-weight:600;margin-top:3px">B등급 이상 19건</div>
+    </div>
+    <div class="card" style="text-align:center;padding:20px 16px">
+      <div style="font-size:32px;font-weight:900;color:var(--green);line-height:1">89%</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:6px">판단 기준 재사용률</div>
+      <div style="font-size:10px;color:var(--green);font-weight:600;margin-top:3px">↑ 전월 대비 +7%</div>
+    </div>
+  </div>
+
+  <!-- 3컬럼: 공공형 | 민간형 | 재사용 구조 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px">
+
+    <!-- 공공형 평가 기준 -->
+    <div class="card accum-card accum-pub">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="#fff"><rect x="2" y="2" width="12" height="3" rx="1"/><rect x="2" y="7" width="8" height="2" rx="1"/><rect x="2" y="11" width="10" height="2" rx="1"/></svg>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:var(--blue)">공공형 (LH 신축매입)</div>
+          <div style="font-size:10px;color:var(--g400)">23개 사업지 기준</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--g600)">A. 교통 접근성</span><span style="font-size:11px;font-weight:700">평균 21.2pt</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:85%;background:var(--blue)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--g600)">B. 생활 인프라</span><span style="font-size:11px;font-weight:700">평균 15.8pt</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:79%;background:var(--teal)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--g600)">C. 사업 규모</span><span style="font-size:11px;font-weight:700">평균 17.4pt</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:87%;background:var(--purple)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--g600)">F. 가점 평균</span><span style="font-size:11px;font-weight:700">5.1pt</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:51%;background:var(--pink)"></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;padding:8px 10px;background:rgba(26,86,219,.06);border-radius:7px">
+        <div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:3px">공공형 합격 패턴</div>
+        <div style="font-size:10px;color:var(--g600)">지하철 500m 이내 + 소형비율 80%↑ + 모듈러 공법 → A등급 확률 92%</div>
+      </div>
+    </div>
+
+    <!-- 민간형 평가 기준 -->
+    <div class="card accum-card accum-prv">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="#fff"><path d="M8 2L2 6v8h4v-4h4v4h4V6L8 2z"/></svg>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:#0369a1">민간형 (자체 분양)</div>
+          <div style="font-size:10px;color:var(--g400)">24개 사업지 기준</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--g600)">A. 교통 접근성</span><span style="font-size:11px;font-weight:700">평균 19.5pt</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:78%;background:var(--teal)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--g600)">C. 사업 규모</span><span style="font-size:11px;font-weight:700">평균 14.2pt</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:71%;background:var(--purple)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--g600)">사업성 ROI</span><span style="font-size:11px;font-weight:700">평균 14.8%</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:74%;background:var(--green)"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--g600)">프리미엄 입지</span><span style="font-size:11px;font-weight:700">가중치 +30%</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:60%;background:var(--orange)"></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;padding:8px 10px;background:rgba(14,165,233,.06);border-radius:7px">
+        <div style="font-size:10px;font-weight:700;color:#0369a1;margin-bottom:3px">민간형 수익 패턴</div>
+        <div style="font-size:10px;color:var(--g600)">대지 600㎡↑ + 역세권 + 용적률 250%↑ → ROI 15% 달성 확률 78%</div>
+      </div>
+    </div>
+
+    <!-- 재사용 구조 -->
+    <div class="card accum-card accum-reuse">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="#fff"><path d="M8 2a6 6 0 10.001 12.001A6 6 0 008 2zm0 10.5a4.5 4.5 0 110-9 4.5 4.5 0 010 9zM8 5v3l2 2-1 1-2.5-2.5V5H8z"/></svg>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:#047857">유사 사업지 재사용</div>
+          <div style="font-size:10px;color:var(--g400)">누적 적용 현황</div>
+        </div>
+      </div>
+
+      <!-- 재사용 이력 -->
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="background:var(--g50);border-radius:7px;padding:8px 10px;border:1px solid var(--g200)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+            <span style="font-size:10px;font-weight:700;color:var(--green)">역세권 소형주거 패턴</span>
+            <span class="chip chip-green" style="font-size:9px">8회 재사용</span>
+          </div>
+          <div style="font-size:10px;color:var(--g600)">지하철 300m · 618~720㎡ · 30~35세대</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px 10px;border:1px solid var(--g200)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+            <span style="font-size:10px;font-weight:700;color:var(--teal)">준주거 복합 패턴</span>
+            <span class="chip chip-teal" style="font-size:9px">5회 재사용</span>
+          </div>
+          <div style="font-size:10px;color:var(--g600)">준주거 용도 · 용적률 300%↑ · 상업+주거 복합</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px 10px;border:1px solid var(--g200)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+            <span style="font-size:10px;font-weight:700;color:var(--purple)">외곽 대규모 패턴</span>
+            <span class="chip chip-purple" style="font-size:9px">4회 재사용</span>
+          </div>
+          <div style="font-size:10px;color:var(--g600)">대지 1,000㎡↑ · 지하주차 포함 · 50세대+</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px 10px;border:1px solid var(--g200)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+            <span style="font-size:10px;font-weight:700;color:var(--orange)">소규모 다세대 패턴</span>
+            <span class="chip chip-amber" style="font-size:9px">6회 재사용</span>
+          </div>
+          <div style="font-size:10px;color:var(--g600)">300~500㎡ · 15~20세대 · 단순 구성</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단: 프로젝트별 평가 결과 누적 타임라인 -->
+  <div class="card" style="padding:18px 22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="side-title" style="margin-bottom:0">프로젝트별 평가 결과 누적 — 판단 로직 고도화 추이</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:var(--blue);border-radius:2px"></div><span style="font-size:10px;color:var(--g600)">공공형</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:var(--teal);border-radius:2px"></div><span style="font-size:10px;color:var(--g600)">민간형</span></div>
+      </div>
+    </div>
+    <!-- 바 차트 목업 -->
+    <div style="display:flex;align-items:flex-end;gap:10px;height:100px;padding:0 4px">
+      <!-- 월별 막대 -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:80px">
+          <div style="width:14px;background:var(--blue);border-radius:3px 3px 0 0;height:40px"></div>
+          <div style="width:14px;background:var(--teal);border-radius:3px 3px 0 0;height:32px;opacity:.8"></div>
+        </div>
+        <div style="font-size:9px;color:var(--g400)">10월</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:80px">
+          <div style="width:14px;background:var(--blue);border-radius:3px 3px 0 0;height:50px"></div>
+          <div style="width:14px;background:var(--teal);border-radius:3px 3px 0 0;height:38px;opacity:.8"></div>
+        </div>
+        <div style="font-size:9px;color:var(--g400)">11월</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:80px">
+          <div style="width:14px;background:var(--blue);border-radius:3px 3px 0 0;height:56px"></div>
+          <div style="width:14px;background:var(--teal);border-radius:3px 3px 0 0;height:44px;opacity:.8"></div>
+        </div>
+        <div style="font-size:9px;color:var(--g400)">12월</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:80px">
+          <div style="width:14px;background:var(--blue);border-radius:3px 3px 0 0;height:48px"></div>
+          <div style="width:14px;background:var(--teal);border-radius:3px 3px 0 0;height:52px;opacity:.8"></div>
+        </div>
+        <div style="font-size:9px;color:var(--g400)">1월</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:80px">
+          <div style="width:14px;background:var(--blue);border-radius:3px 3px 0 0;height:64px"></div>
+          <div style="width:14px;background:var(--teal);border-radius:3px 3px 0 0;height:48px;opacity:.8"></div>
+        </div>
+        <div style="font-size:9px;color:var(--g400)">2월</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:80px">
+          <div style="width:14px;background:var(--blue);border-radius:3px 3px 0 0;height:72px"></div>
+          <div style="width:14px;background:var(--teal);border-radius:3px 3px 0 0;height:56px;opacity:.8"></div>
+        </div>
+        <div style="font-size:9px;color:var(--g400)">3월</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:80px">
+          <div style="width:14px;background:var(--blue);border-radius:3px 3px 0 0;height:80px"></div>
+          <div style="width:14px;background:var(--teal);border-radius:3px 3px 0 0;height:64px;opacity:.8"></div>
+        </div>
+        <div style="font-size:9px;color:var(--g400)">4월</div>
+      </div>
+      <!-- 구분선과 설명 -->
+      <div style="flex:2;padding-left:16px;border-left:2px dashed var(--g200)">
+        <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px">📈 고도화 지표</div>
+        <div style="font-size:10px;color:var(--g600);line-height:1.7">
+          평가 속도 <strong>42% 단축</strong><br>
+          기준 재사용률 <strong>89%</strong><br>
+          신규 패턴 자동 추출 <strong>월 2.3개</strong><br>
+          A등급 예측 정확도 <strong>94%</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div>
+      <div class="msg-label">전달 메시지</div>
+      <div class="msg-arrow">반복 → 고도화</div>
+    </div>
+    <div class="msg-text">개별 검토에 그치지 않고 <strong>반복 적용될수록 사업지 판단 로직이 고도화</strong>되는 구조임을 보여줌<br>공공형/민간형 기준 분리 → 유사 사업지 패턴 자동 추출 → 재사용률 89% → 평가 속도 42% 단축</div>
+  </div>
+</div>
+
+<!-- ══ 탭 스크립트 ════════════════════════════════════════════ -->
+<script>
+function showTab(idx) {
+  document.querySelectorAll('.screen').forEach((s,i) => s.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+}
+</script>
+</body>
+</html>
