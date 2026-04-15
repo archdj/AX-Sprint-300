@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1280" />
+<title>UnitBuild — 그룹 B. 기획설계 생성</title>
+<!-- 폰트: 시스템 폰트 fallback 우선, 외부 폰트는 optional -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+/* ── 디자인 토큰 ─────────────────────────────── */
+:root {
+  --navy:   #0a1628;
+  --blue:   #1a56db;
+  --blue2:  #3b82f6;
+  --teal:   #0ea5e9;
+  --green:  #10b981;
+  --orange: #f97316;
+  --purple: #8b5cf6;
+  --pink:   #ec4899;
+  --amber:  #f59e0b;
+  --red:    #ef4444;
+  --g50:    #f8fafc;
+  --g100:   #f1f5f9;
+  --g200:   #e2e8f0;
+  --g400:   #94a3b8;
+  --g600:   #475569;
+  --g900:   #0f172a;
+  --r:      14px;
+  --rx:     20px;
+  --sh:     0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --shh:    0 8px 30px rgba(26,86,219,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,-apple-system,sans-serif;background:var(--g50);color:var(--g900);-webkit-font-smoothing:antialiased}
+
+/* ── 탭 네비 ─────────────────────────────────── */
+.topbar{background:#fff;border-bottom:1px solid var(--g200);height:60px;display:flex;align-items:center;padding:0 32px;gap:8px;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:center;gap:8px;margin-right:24px}
+.logo-icon{width:34px;height:34px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.logo-text{font-weight:900;font-size:16px;color:var(--g900)}
+.logo-sub{font-size:10px;color:var(--g400)}
+.tab-btn{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--g600);transition:.15s;white-space:nowrap}
+.tab-btn:hover{background:var(--g100);color:var(--g900)}
+.tab-btn.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,.25)}
+.group-badge{margin-left:auto;padding:4px 14px;background:rgba(26,86,219,.08);color:var(--blue);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em}
+
+/* ── 화면 캔버스 ─────────────────────────────── */
+.screen{display:none;width:1280px;min-height:800px;padding:28px 32px 32px}
+.screen.active{display:block}
+
+/* ── 공통 카드 ──────────────────────────────── */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:20px;border:1px solid var(--g200)}
+.card-sm{background:#fff;border-radius:10px;box-shadow:var(--sh);padding:14px 16px;border:1px solid var(--g200)}
+.section-tag{display:inline-block;padding:3px 10px;background:rgba(26,86,219,.08);color:var(--blue);border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── 스크린 헤더 ────────────────────────────── */
+.screen-header{margin-bottom:22px}
+.screen-num{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.screen-title{font-size:22px;font-weight:900;color:var(--g900);line-height:1.25}
+.screen-desc{font-size:13px;color:var(--g400);margin-top:4px}
+
+/* ── 메시지 배너 ─────────────────────────────── */
+.msg-banner{margin-top:20px;background:linear-gradient(135deg,var(--navy) 0%,#0f2c5a 60%,#1a3a7a 100%);border-radius:12px;padding:14px 22px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.msg-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 50%,rgba(26,86,219,.3) 0%,transparent 60%),linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:auto,40px 40px,40px 40px}
+.msg-arrow{font-size:20px;background:rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;color:#fff;font-weight:900;white-space:nowrap;position:relative;z-index:1}
+.msg-text{color:rgba(255,255,255,.95);font-size:13px;font-weight:600;line-height:1.5;position:relative;z-index:1}
+.msg-label{font-size:10px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:2px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ── 점수 바 ─────────────────────────────────── */
+.score-bar{height:7px;border-radius:4px;background:var(--g200);overflow:hidden;margin-top:5px}
+.score-fill{height:100%;border-radius:4px;transition:width .6s}
+
+/* ── 그리드 헬퍼 ─────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.col-span-2{grid-column:span 2}
+
+/* ── 태그 칩 ─────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.chip-blue{background:rgba(26,86,219,.1);color:#1d4ed8}
+.chip-blue2{background:rgba(59,130,246,.1);color:#1d4ed8}
+.chip-green{background:rgba(16,185,129,.1);color:#047857}
+.chip-amber{background:rgba(245,158,11,.1);color:#b45309}
+.chip-red{background:rgba(239,68,68,.1);color:#b91c1c}
+.chip-purple{background:rgba(139,92,246,.1);color:#6d28d9}
+.chip-teal{background:rgba(14,165,233,.1);color:#0369a1}
+.chip-orange{background:rgba(249,115,22,.1);color:#c2410c}
+
+/* ── 리스트 아이템 ──────────────────────────── */
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--g100)}
+.list-row:last-child{border-bottom:none}
+.list-key{font-size:12px;color:var(--g600)}
+.list-val{font-size:12px;font-weight:700;color:var(--g900)}
+
+/* ── 등급 배지 ──────────────────────────────── */
+.grade{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-weight:900;font-size:14px}
+.grade-A{background:#dcfce7;color:#15803d;border:2px solid #15803d}
+.grade-B{background:#dbeafe;color:#1d4ed8;border:2px solid #1d4ed8}
+.grade-C{background:#fef9c3;color:#b45309;border:2px solid #b45309}
+.grade-X{background:#fee2e2;color:#b91c1c;border:2px solid #b91c1c}
+
+/* ── 사이드바 섹션 타이틀 ────────────────────── */
+.side-title{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+
+/* ── 수치 강조 카드 ─────────────────────────── */
+.stat-box{text-align:center;padding:14px 10px}
+.stat-num{font-size:24px;font-weight:900;line-height:1}
+.stat-lbl{font-size:10px;color:var(--g400);margin-top:4px}
+
+/* ── 리스크 아이템 ──────────────────────────── */
+.risk-item{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:8px;margin-bottom:6px}
+.risk-high{background:#fef2f2;border-left:3px solid var(--red)}
+.risk-mid{background:#fffbeb;border-left:3px solid var(--amber)}
+.risk-low{background:#f0fdf4;border-left:3px solid var(--green)}
+
+/* ── 테이블 ─────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--g50);color:var(--g600);font-weight:700;padding:8px 12px;text-align:left;border-bottom:2px solid var(--g200)}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--g100);color:var(--g900)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--g50)}
+
+/* ── 진행 스텝 ──────────────────────────────── */
+.step-flow{display:flex;align-items:center;gap:0}
+.step-node{display:flex;flex-direction:column;align-items:center;gap:4px}
+.step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.step-line-h{flex:1;height:2px;background:linear-gradient(90deg,var(--blue),var(--blue2));min-width:24px}
+
+/* ── 대안 선택 카드 ─────────────────────────── */
+.alt-card{border-radius:var(--r);border:2px solid var(--g200);padding:16px;transition:.2s;cursor:pointer;background:#fff}
+.alt-card.selected{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.12);background:rgba(26,86,219,.02)}
+.alt-card.runner{border-color:var(--blue2);box-shadow:0 0 0 2px rgba(59,130,246,.1)}
+
+/* ── 비교 하이라이트 ────────────────────────── */
+.cmp-best{background:rgba(16,185,129,.06);border-left:3px solid var(--green)}
+.cmp-mid{background:rgba(59,130,246,.04);border-left:3px solid var(--blue2)}
+.cmp-low{background:#fff;border-left:3px solid var(--g200)}
+
+/* ── 모듈 블록 ──────────────────────────────── */
+.module-block{border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff}
+
+/* ── 비교 바 (전후) ─────────────────────────── */
+.diff-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+
+/* ── 자산 카드 ──────────────────────────────── */
+.asset-card{border-radius:10px;padding:14px;border:1px solid var(--g200);background:#fff;position:relative;overflow:hidden}
+.asset-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.asset-blue::before{background:linear-gradient(90deg,var(--blue),var(--blue2))}
+.asset-blue2::before{background:linear-gradient(90deg,var(--blue2),#93c5fd)}
+.asset-purple::before{background:linear-gradient(90deg,var(--purple),#a78bfa)}
+.asset-green::before{background:linear-gradient(90deg,var(--green),#34d399)}
+.asset-orange::before{background:linear-gradient(90deg,var(--orange),#fb923c)}
+
+/* ── 폼 입력 목업 ───────────────────────────── */
+.form-input-mock{background:var(--g50);border:1.5px solid var(--g200);border-radius:9px;padding:9px 14px;font-size:12px;color:var(--g900);width:100%}
+.form-label{font-size:10px;font-weight:600;color:var(--g600);margin-bottom:4px;display:block}
+.form-select-mock{background:#fff;border:1.5px solid var(--g200);border-radius:9px;padding:9px 14px;font-size:12px;color:var(--g900);width:100%;display:flex;justify-content:space-between;align-items:center}
+
+/* ── 축적 패턴 카드 ─────────────────────────── */
+.accum-card{border-radius:10px;padding:14px;border:1px solid var(--g200);background:#fff;position:relative;overflow:hidden}
+.accum-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.accum-pub::after{background:var(--blue)}
+.accum-prv::after{background:var(--blue2)}
+.accum-reuse::after{background:var(--green)}
+
+/* ── 스크롤바 ────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ══ 탑바 ══════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">UnitBuild</div>
+      <div class="logo-sub">모듈러 기획설계 자동생성</div>
+    </div>
+  </div>
+  <button class="tab-btn active" onclick="showTab(0)">① 사업지·상품 조건 입력</button>
+  <button class="tab-btn" onclick="showTab(1)">② 배치안·평면안 생성</button>
+  <button class="tab-btn" onclick="showTab(2)">③ 대안 비교 및 우선안 선정</button>
+  <button class="tab-btn" onclick="showTab(3)">④ 재생성·설계 자산화</button>
+  <div class="group-badge">🗂️ 그룹 B — 기획설계 생성</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #19 — 사업지 조건 및 상품 조건 입력
+════════════════════════════════════════════════════════════ -->
+<div class="screen active" id="s0">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #19 · 그룹 B — 기획설계 생성</div>
+    <div class="screen-title">사업지 조건 및 상품 조건 입력 화면</div>
+    <div class="screen-desc">사업지별 다른 조건을 기획설계 생성에 바로 활용 가능한 입력 데이터로 구조화</div>
+  </div>
+
+  <!-- 상단: 연결된 사업지 배너 -->
+  <div style="background:linear-gradient(135deg,var(--blue) 0%,#1e40af 100%);border-radius:var(--r);padding:16px 22px;color:#fff;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">연결된 사업지 — 그룹 A 검토 결과 자동 인계</div>
+      <div style="font-size:18px;font-weight:900">서울특별시 중랑구 면목동 612-6</div>
+      <div style="font-size:12px;opacity:.8;margin-top:2px">SITE-C 82.4점 · A등급 · 심의통과 90%+ · 618㎡</div>
+    </div>
+    <div style="display:flex;gap:20px;align-items:center">
+      <div style="text-align:center"><div style="font-size:20px;font-weight:900">618</div><div style="font-size:10px;opacity:.7">대지면적(㎡)</div></div>
+      <div style="width:1px;background:rgba(255,255,255,.2);height:40px"></div>
+      <div style="text-align:center"><div style="font-size:20px;font-weight:900">5층</div><div style="font-size:10px;opacity:.7">최고층수</div></div>
+      <div style="width:1px;background:rgba(255,255,255,.2);height:40px"></div>
+      <div style="text-align:center"><div style="font-size:20px;font-weight:900">제2종</div><div style="font-size:10px;opacity:.7">용도지역</div></div>
+      <div style="width:1px;background:rgba(255,255,255,.2);height:40px"></div>
+      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:9px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">기획설계 생성 →</div>
+    </div>
+  </div>
+
+  <!-- 메인: 좌(사업지 조건) | 우(상품 조건) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+    <!-- ── 좌: 사업지 형상·진입조건·법규제한 ── -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="side-title" style="margin-bottom:0">사업지 형상 · 진입 조건</div>
+          <span class="chip chip-blue">VWorld 자동 인계</span>
+        </div>
+
+        <!-- 사이트 형상 미리보기 -->
+        <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:10px;height:130px;position:relative;margin-bottom:14px;overflow:hidden">
+          <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(26,86,219,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(26,86,219,.07) 1px,transparent 1px);background-size:16px 16px"></div>
+          <svg viewBox="0 0 300 130" style="position:absolute;inset:0;width:100%;height:100%">
+            <polygon points="80,20 220,20 220,110 80,110" fill="rgba(26,86,219,.12)" stroke="#1a56db" stroke-width="2" stroke-dasharray="4,2"/>
+            <rect x="40" y="112" width="220" height="14" fill="rgba(148,163,184,.4)" rx="2"/>
+            <text x="150" y="123" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">남측 8m 도로</text>
+            <line x1="80" y1="14" x2="220" y2="14" stroke="#1a56db" stroke-width="1"/>
+            <text x="150" y="12" text-anchor="middle" font-size="8" fill="#1a56db" font-weight="700">25.2m</text>
+            <line x1="226" y1="20" x2="226" y2="110" stroke="#1a56db" stroke-width="1"/>
+            <text x="235" y="68" font-size="8" fill="#1a56db" font-weight="700">24.5m</text>
+            <text x="150" y="68" text-anchor="middle" font-size="11" fill="#1a56db" font-weight="900">618 ㎡</text>
+            <text x="150" y="82" text-anchor="middle" font-size="9" fill="#3b82f6">장방형 · 평지</text>
+            <text x="256" y="28" font-size="10" fill="#64748b" font-weight="700">N↑</text>
+          </svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div class="list-row"><span class="list-key">대지 형상</span><span class="list-val">장방형 (25.2 × 24.5m)</span></div>
+          <div class="list-row"><span class="list-key">진입 방향</span><span class="list-val">남측 1면 접도</span></div>
+          <div class="list-row"><span class="list-key">접도 폭</span><span class="list-val" style="color:var(--green)">8m (차량 진입 가능)</span></div>
+          <div class="list-row"><span class="list-key">경사도</span><span class="list-val">2.1° (평지 기준)</span></div>
+          <div class="list-row"><span class="list-key">인접 현황</span><span class="list-val">북·동·서 3면 주택</span></div>
+        </div>
+      </div>
+
+      <!-- 법규 제한 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:12px">법규 제한 — 자동 인계된 값</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:var(--g50);border-radius:9px;padding:12px;border:1px solid var(--g200)">
+            <div style="font-size:10px;color:var(--g400);margin-bottom:3px">건폐율 한도</div>
+            <div style="font-size:18px;font-weight:900;color:var(--blue)">60%</div>
+            <div class="score-bar"><div class="score-fill" style="width:60%;background:var(--blue)"></div></div>
+          </div>
+          <div style="background:var(--g50);border-radius:9px;padding:12px;border:1px solid var(--g200)">
+            <div style="font-size:10px;color:var(--g400);margin-bottom:3px">용적률 한도</div>
+            <div style="font-size:18px;font-weight:900;color:var(--blue2)">250%</div>
+            <div class="score-bar"><div class="score-fill" style="width:83%;background:var(--blue2)"></div></div>
+          </div>
+          <div style="background:var(--g50);border-radius:9px;padding:12px;border:1px solid var(--g200)">
+            <div style="font-size:10px;color:var(--g400);margin-bottom:3px">최고층수</div>
+            <div style="font-size:18px;font-weight:900;color:var(--purple)">5층</div>
+            <div style="font-size:10px;color:var(--g600);margin-top:2px">일조 사선 반영</div>
+          </div>
+          <div style="background:var(--g50);border-radius:9px;padding:12px;border:1px solid var(--g200)">
+            <div style="font-size:10px;color:var(--g400);margin-bottom:3px">북측 이격</div>
+            <div style="font-size:18px;font-weight:900;color:var(--amber)">1.5H</div>
+            <div style="font-size:10px;color:var(--amber);font-weight:600;margin-top:2px">⚠ 설계 반영 필수</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 우: 목표 세대수·상품유형·운영조건 ── -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="side-title" style="margin-bottom:0">목표 세대수 · 상품 유형</div>
+          <span class="chip chip-green">LH 기준 자동 적용</span>
+        </div>
+
+        <!-- 세대수 슬라이더 목업 -->
+        <div style="background:var(--g50);border-radius:10px;padding:14px;margin-bottom:14px;border:1px solid var(--g200)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:12px;color:var(--g600)">목표 세대수</span>
+            <span style="font-size:22px;font-weight:900;color:var(--blue)">32세대</span>
+          </div>
+          <div style="position:relative;height:6px;background:var(--g200);border-radius:3px;margin:8px 0">
+            <div style="position:absolute;left:0;width:64%;height:100%;background:linear-gradient(90deg,var(--blue),var(--blue2));border-radius:3px"></div>
+            <div style="position:absolute;left:64%;top:-5px;width:16px;height:16px;background:#fff;border:2px solid var(--blue);border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.15);transform:translateX(-50%)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--g400)"><span>20세대</span><span>50세대</span></div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <div style="flex:1;text-align:center;background:#fff;border-radius:7px;padding:8px;border:1px solid var(--g200)">
+              <div style="font-size:10px;color:var(--g400)">LH 최소</div>
+              <div style="font-size:13px;font-weight:800;color:var(--g900)">20세대</div>
+            </div>
+            <div style="flex:1;text-align:center;background:rgba(26,86,219,.06);border-radius:7px;padding:8px;border:1.5px solid var(--blue)">
+              <div style="font-size:10px;color:var(--blue)">추천 (수요예측)</div>
+              <div style="font-size:13px;font-weight:800;color:var(--blue)">32세대</div>
+            </div>
+            <div style="flex:1;text-align:center;background:#fff;border-radius:7px;padding:8px;border:1px solid var(--g200)">
+              <div style="font-size:10px;color:var(--g400)">용적률 최대</div>
+              <div style="font-size:13px;font-weight:800;color:var(--g900)">38세대</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 상품 유형 선택 -->
+        <div style="margin-bottom:14px">
+          <div class="form-label">상품 유형 선택</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="border:2px solid var(--blue);border-radius:9px;padding:10px 12px;background:rgba(26,86,219,.04);cursor:pointer">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:12px;font-weight:800;color:var(--blue)">BALCONY-3</span>
+                <span class="chip chip-blue" style="font-size:9px">추천</span>
+              </div>
+              <div style="font-size:10px;color:var(--g600);margin-top:2px">3,200×8,100mm · LH-B형 매칭</div>
+            </div>
+            <div style="border:1px solid var(--g200);border-radius:9px;padding:10px 12px;cursor:pointer">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">BALCONY-2</div>
+              <div style="font-size:10px;color:var(--g600);margin-top:2px">3,200×7,200mm · LH-A형 매칭</div>
+            </div>
+            <div style="border:1px solid var(--g200);border-radius:9px;padding:10px 12px;cursor:pointer">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">BASIC-1-C1</div>
+              <div style="font-size:10px;color:var(--g600);margin-top:2px">3,200×6,900mm · 소형 특화</div>
+            </div>
+            <div style="border:1px solid var(--g200);border-radius:9px;padding:10px 12px;cursor:pointer">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">혼합 구성</div>
+              <div style="font-size:10px;color:var(--g600);margin-top:2px">2종 이상 조합 배치</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 운영 조건 -->
+        <div>
+          <div class="form-label">운영 조건</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--g50);border-radius:8px;padding:9px 12px;border:1px solid var(--g200)">
+              <span style="font-size:12px;color:var(--g900)">장기임대 운영 계획</span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:36px;height:20px;background:var(--blue);border-radius:10px;display:flex;align-items:center;padding:2px;justify-content:flex-end"><div style="width:16px;height:16px;background:#fff;border-radius:50%"></div></div>
+                <span style="font-size:11px;font-weight:700;color:var(--blue)">ON</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--g50);border-radius:8px;padding:9px 12px;border:1px solid var(--g200)">
+              <span style="font-size:12px;color:var(--g900)">LH 인증 신청 예정</span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:36px;height:20px;background:var(--g200);border-radius:10px;display:flex;align-items:center;padding:2px;justify-content:flex-start"><div style="width:16px;height:16px;background:#fff;border-radius:50%"></div></div>
+                <span style="font-size:11px;font-weight:600;color:var(--g400)">OFF</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--g50);border-radius:8px;padding:9px 12px;border:1px solid var(--g200)">
+              <span style="font-size:12px;color:var(--g900)">에너지 목표 등급</span>
+              <span class="chip chip-green">2등급</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단: 기획설계 적용 조건 요약 -->
+  <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:12px;padding:16px 22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.06em">✅ 기획설계 적용 조건 요약 — 생성 준비 완료</div>
+      <div style="background:var(--blue);color:#fff;border-radius:9px;padding:8px 22px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(26,86,219,.3)">🚀 기획설계 자동 생성</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;border:1px solid #bfdbfe">
+        <div style="font-size:9px;color:var(--g400);margin-bottom:3px">대지면적</div>
+        <div style="font-size:15px;font-weight:900;color:var(--blue)">618㎡</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;border:1px solid #bfdbfe">
+        <div style="font-size:9px;color:var(--g400);margin-bottom:3px">모듈 타입</div>
+        <div style="font-size:13px;font-weight:900;color:var(--blue)">BALCONY-3</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;border:1px solid #bfdbfe">
+        <div style="font-size:9px;color:var(--g400);margin-bottom:3px">목표 세대수</div>
+        <div style="font-size:15px;font-weight:900;color:var(--blue2)">32세대</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;border:1px solid #bfdbfe">
+        <div style="font-size:9px;color:var(--g400);margin-bottom:3px">층수 계획</div>
+        <div style="font-size:15px;font-weight:900;color:var(--purple)">5층</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;border:1px solid #bfdbfe">
+        <div style="font-size:9px;color:var(--g400);margin-bottom:3px">장기임대</div>
+        <div style="font-size:13px;font-weight:900;color:var(--green)">적용 ✓</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;border:1px solid #bfdbfe">
+        <div style="font-size:9px;color:var(--g400);margin-bottom:3px">예상 ROI</div>
+        <div style="font-size:15px;font-weight:900;color:var(--orange)">12.4%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div>
+      <div class="msg-label">전달 메시지</div>
+      <div class="msg-arrow">조건 → 입력 데이터</div>
+    </div>
+    <div class="msg-text">사업지별 다른 조건을 기획설계 생성에 바로 활용 가능한 <strong>구조화된 입력 데이터</strong>로 변환한다는 점을 보여줌<br>형상·진입조건·법규제한(좌) + 세대수·상품유형·운영조건(우) → 하단 요약 → 기획설계 자동 생성 연결</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #20 — 배치안·평면안·공간구성안 생성
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s1">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #20 · 그룹 B — 기획설계 생성</div>
+    <div class="screen-title">배치안·평면안·공간구성안 생성 화면</div>
+    <div class="screen-desc">수작업 기획설계가 아닌, 조건 기반으로 복수 대안을 자동 생성하는 구조</div>
+  </div>
+
+  <!-- 생성 완료 배너 -->
+  <div style="background:linear-gradient(90deg,rgba(16,185,129,.08),rgba(26,86,219,.06));border:1px solid #a7f3d0;border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:12px;margin-bottom:18px">
+    <div style="width:28px;height:28px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="2,8 6,12 14,4"/></svg>
+    </div>
+    <div style="flex:1">
+      <span style="font-size:12px;font-weight:800;color:#047857">조건 기반 3개 대안 자동 생성 완료</span>
+      <span style="font-size:11px;color:var(--g600);margin-left:8px">면목동 612-6 · BALCONY-3 · 32세대 · 5층 기준</span>
+    </div>
+    <span class="chip chip-green">생성 시간 8.3초</span>
+  </div>
+
+  <!-- 3개 대안 배치안 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px">
+
+    <!-- 대안 1: 중앙집중형 -->
+    <div class="alt-card selected">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div>
+          <span style="font-size:11px;font-weight:700;color:var(--blue);background:rgba(26,86,219,.1);padding:3px 10px;border-radius:999px">대안 1 — 추천 ★</span>
+        </div>
+        <span style="font-size:10px;color:var(--g400)">중앙집중형</span>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:9px;height:160px;position:relative;overflow:hidden;margin-bottom:12px">
+        <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(26,86,219,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(26,86,219,.06) 1px,transparent 1px);background-size:14px 14px"></div>
+        <svg viewBox="0 0 220 160" style="position:absolute;inset:0;width:100%;height:100%">
+          <rect x="10" y="8" width="200" height="144" fill="none" stroke="#bfdbfe" stroke-width="1.5" stroke-dasharray="4,2"/>
+          <rect x="10" y="148" width="200" height="12" fill="rgba(148,163,184,.3)" rx="1"/>
+          <text x="110" y="156" text-anchor="middle" font-size="7" fill="#94a3b8">남측 8m 도로</text>
+          <rect x="22" y="20" width="82" height="116" fill="rgba(26,86,219,.15)" stroke="#1a56db" stroke-width="1.5" rx="3"/>
+          <text x="63" y="78" text-anchor="middle" font-size="8" fill="#1a56db" font-weight="700">A동</text>
+          <text x="63" y="89" text-anchor="middle" font-size="7" fill="#3b82f6">16세대 × 5F</text>
+          <rect x="116" y="20" width="82" height="116" fill="rgba(26,86,219,.1)" stroke="#1a56db" stroke-width="1.5" rx="3"/>
+          <text x="157" y="78" text-anchor="middle" font-size="8" fill="#1a56db" font-weight="700">B동</text>
+          <text x="157" y="89" text-anchor="middle" font-size="7" fill="#3b82f6">16세대 × 5F</text>
+          <rect x="107" y="44" width="9" height="72" fill="rgba(139,92,246,.4)" rx="2"/>
+          <text x="111" y="84" text-anchor="middle" font-size="6" fill="#6d28d9" transform="rotate(-90,111,84)">코어</text>
+          <line x1="22" y1="8" x2="22" y2="20" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="2,1"/>
+          <text x="30" y="15" font-size="6" fill="#b45309">이격</text>
+        </svg>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:rgba(26,86,219,.06);border-radius:7px;padding:8px;text-align:center;border:1px solid rgba(26,86,219,.2)">
+          <div style="font-size:9px;color:var(--g400)">총 세대수</div>
+          <div style="font-size:16px;font-weight:900;color:var(--blue)">32세대</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px;text-align:center;border:1px solid var(--g200)">
+          <div style="font-size:9px;color:var(--g400)">건폐율</div>
+          <div style="font-size:16px;font-weight:900;color:var(--g900)">52.4%</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px;text-align:center;border:1px solid var(--g200)">
+          <div style="font-size:9px;color:var(--g400)">용적률</div>
+          <div style="font-size:16px;font-weight:900;color:var(--g900)">218%</div>
+        </div>
+        <div style="background:rgba(16,185,129,.06);border-radius:7px;padding:8px;text-align:center;border:1px solid rgba(16,185,129,.2)">
+          <div style="font-size:9px;color:var(--g400)">면적효율</div>
+          <div style="font-size:16px;font-weight:900;color:var(--green)">87%</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="chip chip-blue" style="font-size:10px">2동 병렬</span>
+        <span class="chip chip-green" style="font-size:10px">중앙 코어</span>
+        <span class="chip chip-purple" style="font-size:10px">ROI 12.4%</span>
+      </div>
+    </div>
+
+    <!-- 대안 2: 분산형 -->
+    <div class="alt-card runner">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:11px;font-weight:700;color:#1d4ed8;background:rgba(59,130,246,.1);padding:3px 10px;border-radius:999px">대안 2</span>
+        <span style="font-size:10px;color:var(--g400)">ㄷ자 분산형</span>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:9px;height:160px;position:relative;overflow:hidden;margin-bottom:12px">
+        <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.06) 1px,transparent 1px);background-size:14px 14px"></div>
+        <svg viewBox="0 0 220 160" style="position:absolute;inset:0;width:100%;height:100%">
+          <rect x="10" y="8" width="200" height="144" fill="none" stroke="#bfdbfe" stroke-width="1.5" stroke-dasharray="4,2"/>
+          <rect x="10" y="148" width="200" height="12" fill="rgba(148,163,184,.3)" rx="1"/>
+          <rect x="14" y="14" width="58" height="128" fill="rgba(59,130,246,.18)" stroke="#3b82f6" stroke-width="1.5" rx="3"/>
+          <text x="43" y="78" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">A동</text>
+          <text x="43" y="89" text-anchor="middle" font-size="7" fill="#3b82f6">12세대</text>
+          <rect x="88" y="14" width="120" height="58" fill="rgba(59,130,246,.18)" stroke="#3b82f6" stroke-width="1.5" rx="3"/>
+          <text x="148" y="48" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">B동 (12세대)</text>
+          <rect x="88" y="84" width="120" height="58" fill="rgba(59,130,246,.13)" stroke="#3b82f6" stroke-width="1.5" rx="3"/>
+          <text x="148" y="115" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">C동 (8세대)</text>
+          <text x="110" y="74" text-anchor="middle" font-size="6" fill="#047857">중정</text>
+        </svg>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:rgba(59,130,246,.06);border-radius:7px;padding:8px;text-align:center;border:1px solid rgba(59,130,246,.2)">
+          <div style="font-size:9px;color:var(--g400)">총 세대수</div>
+          <div style="font-size:16px;font-weight:900;color:#1d4ed8">32세대</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px;text-align:center;border:1px solid var(--g200)">
+          <div style="font-size:9px;color:var(--g400)">건폐율</div>
+          <div style="font-size:16px;font-weight:900;color:var(--g900)">55.1%</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px;text-align:center;border:1px solid var(--g200)">
+          <div style="font-size:9px;color:var(--g400)">용적률</div>
+          <div style="font-size:16px;font-weight:900;color:var(--g900)">205%</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px;text-align:center;border:1px solid var(--g200)">
+          <div style="font-size:9px;color:var(--g400)">면적효율</div>
+          <div style="font-size:16px;font-weight:900;color:var(--amber)">81%</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="chip chip-blue2" style="font-size:10px">3동 ㄷ자</span>
+        <span class="chip chip-green" style="font-size:10px">중정 확보</span>
+        <span class="chip chip-amber" style="font-size:10px">ROI 10.8%</span>
+      </div>
+    </div>
+
+    <!-- 대안 3: 타워형 -->
+    <div class="alt-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:11px;font-weight:700;color:var(--g600);background:var(--g100);padding:3px 10px;border-radius:999px">대안 3</span>
+        <span style="font-size:10px;color:var(--g400)">단일 집중형</span>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border-radius:9px;height:160px;position:relative;overflow:hidden;margin-bottom:12px">
+        <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(139,92,246,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.06) 1px,transparent 1px);background-size:14px 14px"></div>
+        <svg viewBox="0 0 220 160" style="position:absolute;inset:0;width:100%;height:100%">
+          <rect x="10" y="8" width="200" height="144" fill="none" stroke="#ddd6fe" stroke-width="1.5" stroke-dasharray="4,2"/>
+          <rect x="10" y="148" width="200" height="12" fill="rgba(148,163,184,.3)" rx="1"/>
+          <rect x="28" y="18" width="164" height="124" fill="rgba(139,92,246,.15)" stroke="#8b5cf6" stroke-width="1.5" rx="3"/>
+          <text x="110" y="72" text-anchor="middle" font-size="9" fill="#6d28d9" font-weight="800">A동 (단일)</text>
+          <text x="110" y="84" text-anchor="middle" font-size="7" fill="#8b5cf6">34세대 × 4층</text>
+          <line x1="28" y1="80" x2="192" y2="80" stroke="#a78bfa" stroke-width="1" stroke-dasharray="3,2"/>
+          <rect x="50" y="30" width="14" height="108" fill="rgba(139,92,246,.35)" rx="2"/>
+          <rect x="156" y="30" width="14" height="108" fill="rgba(139,92,246,.35)" rx="2"/>
+        </svg>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:rgba(139,92,246,.06);border-radius:7px;padding:8px;text-align:center;border:1px solid rgba(139,92,246,.2)">
+          <div style="font-size:9px;color:var(--g400)">총 세대수</div>
+          <div style="font-size:16px;font-weight:900;color:#6d28d9">34세대</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px;text-align:center;border:1px solid var(--g200)">
+          <div style="font-size:9px;color:var(--g400)">건폐율</div>
+          <div style="font-size:16px;font-weight:900;color:var(--amber)">59.2%</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px;text-align:center;border:1px solid var(--g200)">
+          <div style="font-size:9px;color:var(--g400)">용적률</div>
+          <div style="font-size:16px;font-weight:900;color:var(--amber)">236%</div>
+        </div>
+        <div style="background:var(--g50);border-radius:7px;padding:8px;text-align:center;border:1px solid var(--g200)">
+          <div style="font-size:9px;color:var(--g400)">면적효율</div>
+          <div style="font-size:16px;font-weight:900;color:var(--amber)">79%</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="chip chip-purple" style="font-size:10px">단일동</span>
+        <span class="chip chip-amber" style="font-size:10px">시공 단순</span>
+        <span class="chip chip-amber" style="font-size:10px">ROI 9.6%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단: 모듈 조합안 / 세대 구성 프로그램 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="side-title" style="margin-bottom:0">대안 1 · 모듈 조합 평면도</div>
+        <span class="chip chip-blue">BALCONY-3 기준</span>
+      </div>
+      <div style="background:#f8fafc;border-radius:8px;padding:12px;border:1px solid var(--g200)">
+        <div style="font-size:10px;color:var(--g400);margin-bottom:8px">1개 층 평면 구성 (2F 기준)</div>
+        <div style="display:flex;gap:2px;align-items:stretch;height:48px">
+          <div style="background:#bfdbfe;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#1d4ed8;width:52px;flex-shrink:0">욕실</div>
+          <div style="background:#93c5fd;border-radius:3px;flex:1;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#1d4ed8">주거</div>
+          <div style="background:#a7f3d0;border-radius:3px;width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#047857">발코니</div>
+          <div style="background:#e2e8f0;border-radius:3px;width:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="font-size:6px;color:#64748b;writing-mode:vertical-rl">코어</span></div>
+          <div style="background:#e2e8f0;border-radius:3px;width:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="font-size:6px;color:#64748b;writing-mode:vertical-rl">코어</span></div>
+          <div style="background:#93c5fd;border-radius:3px;flex:1;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#1d4ed8">주거</div>
+          <div style="background:#a7f3d0;border-radius:3px;width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#047857">발코니</div>
+          <div style="background:#bfdbfe;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#1d4ed8;width:52px;flex-shrink:0">욕실</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--g400)"><span>← 3,200mm →</span><span>× 2 = 6,400mm</span></div>
+      </div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="background:rgba(26,86,219,.06);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(26,86,219,.2)">
+          <div style="font-size:10px;color:var(--g400)">세대당 전용</div>
+          <div style="font-size:14px;font-weight:900;color:var(--blue)">23.8㎡</div>
+          <div style="font-size:9px;color:var(--g600)">LH-B형 ≤ 24㎡</div>
+        </div>
+        <div style="background:rgba(16,185,129,.06);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(16,185,129,.2)">
+          <div style="font-size:10px;color:var(--g400)">층당 세대</div>
+          <div style="font-size:14px;font-weight:900;color:var(--green)">6~7세대</div>
+          <div style="font-size:9px;color:var(--g600)">A동+B동 합산</div>
+        </div>
+        <div style="background:rgba(139,92,246,.06);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(139,92,246,.2)">
+          <div style="font-size:10px;color:var(--g400)">공용부 비율</div>
+          <div style="font-size:14px;font-weight:900;color:var(--purple)">13.2%</div>
+          <div style="font-size:9px;color:var(--g600)">코어+복도</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="side-title" style="margin-bottom:0">공간 프로그램 — 면적 배분</div>
+        <span class="chip chip-purple">대안 1 기준</span>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>공간 구분</th><th>면적</th><th>비율</th><th>비고</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600">주거 전용</td><td>661.4㎡</td><td><span class="chip chip-blue" style="font-size:10px">65.8%</span></td><td style="color:var(--g400)">세대당 23.8㎡×32</td></tr>
+          <tr><td style="font-weight:600">발코니</td><td>162.4㎡</td><td><span class="chip chip-green" style="font-size:10px">16.2%</span></td><td style="color:var(--g400)">서비스 면적</td></tr>
+          <tr><td style="font-weight:600">코어·복도</td><td>132.5㎡</td><td><span class="chip chip-blue2" style="font-size:10px">13.2%</span></td><td style="color:var(--g400)">계단+엘리베이터</td></tr>
+          <tr><td style="font-weight:600">주차장</td><td>—</td><td><span class="chip chip-amber" style="font-size:10px">지상</span></td><td style="color:var(--g400)">19대 (세대당 0.6)</td></tr>
+          <tr style="background:rgba(26,86,219,.03)"><td style="font-weight:800">연면적 합계</td><td style="font-weight:800">1,347.3㎡</td><td><span class="chip chip-blue" style="font-size:10px">218%</span></td><td style="color:var(--g400)">용적률 기준</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div>
+      <div class="msg-label">전달 메시지</div>
+      <div class="msg-arrow">수작업 → 자동 생성</div>
+    </div>
+    <div class="msg-text">수작업 기획설계가 아니라 <strong>조건 기반으로 복수 대안을 자동 생성</strong>할 수 있는 구조임을 보여줌<br>동일 사업지 조건 → 중앙집중형/ㄷ자분산형/단일집중형 3개 대안 8.3초 자동 생성 → 바로 비교 선택</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #21 — 기획설계 대안 비교 및 우선안 선정
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s2">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #21 · 그룹 B — 기획설계 생성</div>
+    <div class="screen-title">기획설계 대안 비교 및 우선안 선정 화면</div>
+    <div class="screen-desc">단일안 작성이 아니라 복수 대안을 비교하고 우선안을 선택하는 기획설계 체계</div>
+  </div>
+
+  <!-- 3대안 비교 헤더 -->
+  <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;gap:0;margin-bottom:18px;border-radius:var(--r);overflow:hidden;border:1px solid var(--g200);box-shadow:var(--sh)">
+    <div style="background:var(--g50);padding:16px 18px;display:flex;align-items:flex-end;border-right:1px solid var(--g200)">
+      <div style="font-size:11px;font-weight:700;color:var(--g600)">비교 항목</div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(26,86,219,.1),rgba(26,86,219,.05));padding:16px;border-right:1px solid var(--g200);position:relative">
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--blue),var(--blue2))"></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:900;color:var(--blue)">대안 1</span>
+        <span style="background:var(--blue);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px">우선안 선정 ★</span>
+      </div>
+      <div style="font-size:11px;color:var(--g600)">중앙집중형 · 2동 병렬</div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(59,130,246,.07),rgba(59,130,246,.03));padding:16px;border-right:1px solid var(--g200);position:relative">
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--blue2),#93c5fd)"></div>
+      <div style="font-size:13px;font-weight:900;color:#1d4ed8;margin-bottom:4px">대안 2</div>
+      <div style="font-size:11px;color:var(--g600)">ㄷ자 분산형 · 중정 포함</div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(139,92,246,.07),rgba(139,92,246,.03));padding:16px;position:relative">
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--purple),#a78bfa)"></div>
+      <div style="font-size:13px;font-weight:900;color:#6d28d9;margin-bottom:4px">대안 3</div>
+      <div style="font-size:11px;color:var(--g600)">단일 집중형 · 4층</div>
+    </div>
+  </div>
+
+  <!-- 비교 테이블 -->
+  <div style="border-radius:var(--r);overflow:hidden;border:1px solid var(--g200);box-shadow:var(--sh);margin-bottom:18px">
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;border-bottom:1px solid var(--g100)">
+      <div style="background:var(--g50);padding:14px 18px;display:flex;align-items:center;border-right:1px solid var(--g100)"><span style="font-size:12px;font-weight:700;color:var(--g600)">📐 면적 효율</span></div>
+      <div class="cmp-best" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="font-size:18px;font-weight:900;color:var(--green)">87%</div>
+        <div class="score-bar" style="width:120px"><div class="score-fill" style="width:87%;background:var(--green)"></div></div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">661㎡ 전용 / 761㎡ 연면적</div>
+      </div>
+      <div class="cmp-mid" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="font-size:18px;font-weight:900;color:var(--blue2)">81%</div>
+        <div class="score-bar" style="width:120px"><div class="score-fill" style="width:81%;background:var(--blue2)"></div></div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">612㎡ 전용 / 755㎡ 연면적</div>
+      </div>
+      <div class="cmp-low" style="padding:12px 18px">
+        <div style="font-size:18px;font-weight:900;color:var(--amber)">79%</div>
+        <div class="score-bar" style="width:120px"><div class="score-fill" style="width:79%;background:var(--amber)"></div></div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">598㎡ 전용 / 756㎡ 연면적</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;border-bottom:1px solid var(--g100)">
+      <div style="background:var(--g50);padding:14px 18px;display:flex;align-items:center;border-right:1px solid var(--g100)"><span style="font-size:12px;font-weight:700;color:var(--g600)">🏠 총 세대수</span></div>
+      <div class="cmp-best" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="font-size:18px;font-weight:900;color:var(--green)">32세대</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">소형(≤24㎡) 28세대 · 85%</div>
+      </div>
+      <div class="cmp-mid" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="font-size:18px;font-weight:900;color:var(--blue2)">32세대</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">소형(≤24㎡) 26세대 · 81%</div>
+      </div>
+      <div class="cmp-low" style="padding:12px 18px">
+        <div style="font-size:18px;font-weight:900;color:var(--amber)">34세대</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">소형(≤24㎡) 26세대 · 76%</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;border-bottom:1px solid var(--g100)">
+      <div style="background:var(--g50);padding:14px 18px;display:flex;align-items:center;border-right:1px solid var(--g100)"><span style="font-size:12px;font-weight:700;color:var(--g600)">🚪 공용부 비율</span></div>
+      <div class="cmp-best" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="font-size:18px;font-weight:900;color:var(--green)">13.2%</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">코어 2개 / 복도 최소화</div>
+      </div>
+      <div class="cmp-mid" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="font-size:18px;font-weight:900;color:var(--blue2)">15.8%</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">코어 3개 / 중정 포함</div>
+      </div>
+      <div class="cmp-low" style="padding:12px 18px">
+        <div style="font-size:18px;font-weight:900;color:var(--amber)">18.4%</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">내부 복도 긴 구조</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr;border-bottom:1px solid var(--g100)">
+      <div style="background:var(--g50);padding:14px 18px;display:flex;align-items:center;border-right:1px solid var(--g100)"><span style="font-size:12px;font-weight:700;color:var(--g600)">💰 예상 ROI</span></div>
+      <div class="cmp-best" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="font-size:18px;font-weight:900;color:var(--green)">12.4%</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">수익 4.2억 · 공사비 34억</div>
+      </div>
+      <div class="cmp-mid" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="font-size:18px;font-weight:900;color:var(--blue2)">10.8%</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">수익 3.6억 · 공사비 33억</div>
+      </div>
+      <div class="cmp-low" style="padding:12px 18px">
+        <div style="font-size:18px;font-weight:900;color:var(--amber)">9.6%</div>
+        <div style="font-size:10px;color:var(--g600);margin-top:4px">수익 3.1억 · 공사비 32억</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:200px 1fr 1fr 1fr">
+      <div style="background:var(--g50);padding:14px 18px;display:flex;align-items:center;border-right:1px solid var(--g100)"><span style="font-size:12px;font-weight:700;color:var(--g600)">⚙️ 운영성 평가</span></div>
+      <div class="cmp-best" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <span class="chip chip-green" style="font-size:10px">관리 용이</span>
+          <span class="chip chip-blue" style="font-size:10px">LH 기준 최적</span>
+        </div>
+      </div>
+      <div class="cmp-mid" style="padding:12px 18px;border-right:1px solid var(--g100)">
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <span class="chip chip-blue2" style="font-size:10px">중정 쾌적성</span>
+          <span class="chip chip-amber" style="font-size:10px">관리 복잡</span>
+        </div>
+      </div>
+      <div class="cmp-low" style="padding:12px 18px">
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <span class="chip chip-amber" style="font-size:10px">시공 단순</span>
+          <span class="chip chip-red" style="font-size:10px">LH 기준 미달</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 우선안 선정 카드 -->
+  <div style="background:linear-gradient(135deg,rgba(26,86,219,.08),rgba(16,185,129,.06));border:1.5px solid rgba(26,86,219,.25);border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:20px">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,var(--blue),var(--green));border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(26,86,219,.25)">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:10px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">우선안 선정 완료</div>
+      <div style="font-size:18px;font-weight:900;color:var(--g900)">대안 1 — 중앙집중형 2동 병렬 배치</div>
+      <div style="font-size:12px;color:var(--g600);margin-top:4px">면적효율 87% · 32세대 · ROI 12.4% · LH 기준 완전 충족 · 설계 자산화 대상</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="text-align:center;padding:10px 16px;background:#fff;border-radius:10px;border:1px solid var(--g200)">
+        <div style="font-size:20px;font-weight:900;color:var(--blue)">87%</div>
+        <div style="font-size:10px;color:var(--g400)">면적효율</div>
+      </div>
+      <div style="text-align:center;padding:10px 16px;background:#fff;border-radius:10px;border:1px solid var(--g200)">
+        <div style="font-size:20px;font-weight:900;color:var(--green)">12.4%</div>
+        <div style="font-size:10px;color:var(--g400)">ROI</div>
+      </div>
+      <div style="background:var(--blue);color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(26,86,219,.3)">
+        다음 단계 →<br><span style="font-size:10px;opacity:.8">BIM 변환</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div>
+      <div class="msg-label">전달 메시지</div>
+      <div class="msg-arrow">단일안 → 비교 선택</div>
+    </div>
+    <div class="msg-text">단일안 작성이 아니라 <strong>복수 대안을 비교하고 우선안을 선택</strong>하는 기획설계 체계임을 보여줌<br>면적효율·세대수·공용부비율·ROI·운영성 5개 지표 동시 비교 → 근거 기반 대안 1 우선안 확정</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCREEN #22 — 조건 변경 재생성 및 유형별 설계 자산화
+════════════════════════════════════════════════════════════ -->
+<div class="screen" id="s3">
+  <div class="screen-header">
+    <div class="screen-num">SCREEN #22 · 그룹 B — 기획설계 생성</div>
+    <div class="screen-title">조건 변경 재생성 및 유형별 설계 자산화 화면</div>
+    <div class="screen-desc">일회성 설계안이 아니라 반복 적용 가능한 유형별 기획설계 자산이 축적되는 구조</div>
+  </div>
+
+  <!-- 상단: 조건 변경 전후 비교 -->
+  <div class="card" style="margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="side-title" style="margin-bottom:0">조건 변경 전 / 후 설계안 비교</div>
+      <span class="chip chip-blue">재생성 완료 · 5.1초</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 56px 1fr;gap:0;align-items:stretch">
+      <!-- 변경 전 -->
+      <div style="background:var(--g50);border-radius:10px;padding:16px;border:1px solid var(--g200)">
+        <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">변경 전 (원안)</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">모듈 타입</span><span style="font-size:12px;font-weight:700;color:var(--g900)">BALCONY-3</span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">층수</span><span style="font-size:12px;font-weight:700;color:var(--g900)">5층</span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">세대수</span><span style="font-size:12px;font-weight:700;color:var(--g900)">32세대</span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">소형비율</span><span style="font-size:12px;font-weight:700;color:var(--g900)">85%</span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">ROI</span><span style="font-size:14px;font-weight:900;color:var(--blue)">12.4%</span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">면적효율</span><span style="font-size:14px;font-weight:900;color:var(--blue)">87%</span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">SITE-C</span><span style="font-size:12px;font-weight:900;color:var(--green)">82.4점 A</span></div>
+        </div>
+      </div>
+
+      <!-- 화살표 -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0 8px">
+        <div style="width:2px;flex:1;background:linear-gradient(180deg,transparent,var(--blue),transparent)"></div>
+        <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--green));border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(26,86,219,.25);flex-shrink:0">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="#fff" stroke-width="2"><path d="M4 8h8M10 5l3 3-3 3"/></svg>
+        </div>
+        <div style="font-size:8px;color:var(--blue);font-weight:700;text-align:center;line-height:1.3">조건<br>변경</div>
+        <div style="width:2px;flex:1;background:linear-gradient(180deg,transparent,var(--blue),transparent)"></div>
+      </div>
+
+      <!-- 변경 후 -->
+      <div style="background:linear-gradient(135deg,rgba(26,86,219,.04),rgba(16,185,129,.04));border-radius:10px;padding:16px;border:1.5px solid rgba(26,86,219,.2)">
+        <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">변경 후 (재생성)</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">모듈 타입</span><span style="font-size:12px;font-weight:700;color:var(--blue)">BALCONY-3 <span style="color:var(--g400);font-weight:400">동일</span></span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">층수</span><span style="font-size:12px;font-weight:700;color:var(--orange)">4층 <span style="font-size:10px;background:rgba(249,115,22,.1);color:var(--orange);padding:2px 6px;border-radius:4px;margin-left:4px">-1층 변경</span></span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">세대수</span><span style="font-size:12px;font-weight:700;color:var(--orange)">26세대 <span style="font-size:10px;background:rgba(249,115,22,.1);color:var(--orange);padding:2px 6px;border-radius:4px;margin-left:4px">-6세대</span></span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">소형비율</span><span style="font-size:12px;font-weight:700;color:var(--green)">88% <span style="font-size:10px;background:rgba(16,185,129,.1);color:var(--green);padding:2px 6px;border-radius:4px;margin-left:4px">+3%↑</span></span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">ROI</span><span style="font-size:14px;font-weight:900;color:var(--amber)">10.1% <span style="font-size:10px;color:var(--red);margin-left:4px">▼ 2.3%p</span></span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">면적효율</span><span style="font-size:14px;font-weight:900;color:var(--blue2)">89% <span style="font-size:10px;color:var(--green);margin-left:4px">▲ 2%p</span></span></div>
+          <div class="diff-bar-wrap"><span style="font-size:11px;color:var(--g600);width:80px;flex-shrink:0">SITE-C</span><span style="font-size:12px;font-weight:900;color:var(--green)">82.4점 A <span style="color:var(--g400);font-weight:400">유지</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단: 유형별 설계 자산 라이브러리 -->
+  <div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div class="side-title" style="margin-bottom:3px">유형별 설계 자산 라이브러리 — 반복 적용 가능한 템플릿</div>
+        <div style="font-size:12px;color:var(--g600)">총 <strong style="color:var(--blue)">12개</strong> 유형 자산 축적 · 신규 자산 추가 중</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <span class="chip chip-blue">전체 12</span>
+        <span class="chip chip-green">역세권 4</span>
+        <span class="chip chip-blue2">준주거 3</span>
+        <span class="chip chip-purple">대규모 3</span>
+        <span class="chip chip-amber">소규모 2</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+
+      <!-- 자산 1 -->
+      <div class="asset-card asset-blue" style="padding-top:18px">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--blue)">역세권 소형주거</div>
+            <div style="font-size:10px;color:var(--g400);margin-top:1px">BALCONY-3 · 2동병렬</div>
+          </div>
+          <span class="chip chip-blue" style="font-size:9px">8회 사용</span>
+        </div>
+        <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:7px;height:72px;position:relative;overflow:hidden;margin-bottom:10px">
+          <svg viewBox="0 0 120 72" style="position:absolute;inset:0;width:100%;height:100%">
+            <rect x="8" y="6" width="46" height="56" fill="rgba(26,86,219,.18)" stroke="#1a56db" stroke-width="1" rx="2"/>
+            <rect x="66" y="6" width="46" height="56" fill="rgba(26,86,219,.12)" stroke="#1a56db" stroke-width="1" rx="2"/>
+            <rect x="10" y="64" width="100" height="7" fill="rgba(148,163,184,.3)" rx="1"/>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">적용 범위</span><span style="font-size:10px;font-weight:700">550~700㎡</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">세대수</span><span style="font-size:10px;font-weight:700">28~38세대</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">평균 ROI</span><span style="font-size:10px;font-weight:700;color:var(--green)">12.1%</span></div>
+        </div>
+      </div>
+
+      <!-- 자산 2 -->
+      <div class="asset-card asset-blue2" style="padding-top:18px">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:#1d4ed8">준주거 복합형</div>
+            <div style="font-size:10px;color:var(--g400);margin-top:1px">BALCONY-3 · ㄷ자형</div>
+          </div>
+          <span class="chip chip-blue2" style="font-size:9px">5회 사용</span>
+        </div>
+        <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:7px;height:72px;position:relative;overflow:hidden;margin-bottom:10px">
+          <svg viewBox="0 0 120 72" style="position:absolute;inset:0;width:100%;height:100%">
+            <rect x="8" y="6" width="30" height="56" fill="rgba(59,130,246,.2)" stroke="#3b82f6" stroke-width="1" rx="2"/>
+            <rect x="44" y="6" width="68" height="24" fill="rgba(59,130,246,.2)" stroke="#3b82f6" stroke-width="1" rx="2"/>
+            <rect x="44" y="38" width="68" height="24" fill="rgba(59,130,246,.15)" stroke="#3b82f6" stroke-width="1" rx="2"/>
+            <rect x="8" y="64" width="104" height="7" fill="rgba(148,163,184,.3)" rx="1"/>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">적용 범위</span><span style="font-size:10px;font-weight:700">700~1000㎡</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">세대수</span><span style="font-size:10px;font-weight:700">40~55세대</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">평균 ROI</span><span style="font-size:10px;font-weight:700;color:var(--green)">11.4%</span></div>
+        </div>
+      </div>
+
+      <!-- 자산 3 -->
+      <div class="asset-card asset-purple" style="padding-top:18px">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:#6d28d9">대규모 타워형</div>
+            <div style="font-size:10px;color:var(--g400);margin-top:1px">BASIC-2 · 단일동</div>
+          </div>
+          <span class="chip chip-purple" style="font-size:9px">3회 사용</span>
+        </div>
+        <div style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border-radius:7px;height:72px;position:relative;overflow:hidden;margin-bottom:10px">
+          <svg viewBox="0 0 120 72" style="position:absolute;inset:0;width:100%;height:100%">
+            <rect x="20" y="6" width="80" height="56" fill="rgba(139,92,246,.2)" stroke="#8b5cf6" stroke-width="1" rx="2"/>
+            <line x1="20" y1="36" x2="100" y2="36" stroke="#a78bfa" stroke-width="0.8" stroke-dasharray="3,2"/>
+            <rect x="10" y="64" width="100" height="7" fill="rgba(148,163,184,.3)" rx="1"/>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">적용 범위</span><span style="font-size:10px;font-weight:700">1000㎡↑</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">세대수</span><span style="font-size:10px;font-weight:700">60~80세대</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">평균 ROI</span><span style="font-size:10px;font-weight:700;color:var(--green)">13.8%</span></div>
+        </div>
+      </div>
+
+      <!-- 자산 4 — 신규 저장 중 -->
+      <div class="asset-card asset-green" style="padding-top:18px;position:relative">
+        <div style="position:absolute;top:8px;right:8px;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px">신규 저장 중</div>
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:#047857">면목동형 2동병렬</div>
+            <div style="font-size:10px;color:var(--g400);margin-top:1px">BALCONY-3 · 5층 · 32세대</div>
+          </div>
+          <span class="chip chip-green" style="font-size:9px">방금 생성</span>
+        </div>
+        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:7px;height:72px;position:relative;overflow:hidden;margin-bottom:10px;border:1.5px dashed #86efac">
+          <svg viewBox="0 0 120 72" style="position:absolute;inset:0;width:100%;height:100%">
+            <rect x="8" y="6" width="46" height="56" fill="rgba(16,185,129,.2)" stroke="#10b981" stroke-width="1.5" rx="2"/>
+            <rect x="66" y="6" width="46" height="56" fill="rgba(16,185,129,.15)" stroke="#10b981" stroke-width="1.5" rx="2"/>
+            <rect x="8" y="64" width="104" height="7" fill="rgba(148,163,184,.3)" rx="1"/>
+            <circle cx="57" cy="34" r="4" fill="rgba(16,185,129,.4)"/>
+            <text x="57" y="37" text-anchor="middle" font-size="5" fill="#047857">+</text>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">면적 조건</span><span style="font-size:10px;font-weight:700">550~700㎡</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">세대수</span><span style="font-size:10px;font-weight:700">30~34세대</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--g600)">ROI</span><span style="font-size:10px;font-weight:700;color:var(--green)">12.4% → 라이브러리</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div>
+      <div class="msg-label">전달 메시지</div>
+      <div class="msg-arrow">일회성 → 자산 축적</div>
+    </div>
+    <div class="msg-text">일회성 설계안이 아니라 <strong>반복 적용 가능한 유형별 기획설계 자산이 축적</strong>되는 구조임을 보여줌<br>조건 변경 → 즉시 재생성(5.1초) → 전후 비교 → 우수 유형을 라이브러리에 자산화 → 다음 프로젝트 재사용</div>
+  </div>
+</div>
+
+<script>
+function showTab(idx) {
+  document.querySelectorAll('.screen').forEach((s,i) => s.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+}
+</script>
+</body>
+</html>

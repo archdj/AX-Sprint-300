@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1280" />
+<title>UnitBuild — 그룹 D. 구조 검토</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+/* ── 디자인 토큰 (Group A 완전 동일) ─────────────── */
+:root {
+  --navy:   #0a1628;
+  --blue:   #1a56db;
+  --blue2:  #3b82f6;
+  --teal:   #0ea5e9;
+  --green:  #10b981;
+  --orange: #f97316;
+  --purple: #8b5cf6;
+  --pink:   #ec4899;
+  --amber:  #f59e0b;
+  --red:    #ef4444;
+  --g50:    #f8fafc;
+  --g100:   #f1f5f9;
+  --g200:   #e2e8f0;
+  --g400:   #94a3b8;
+  --g600:   #475569;
+  --g900:   #0f172a;
+  --r:      14px;
+  --rx:     20px;
+  --sh:     0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --shh:    0 8px 30px rgba(26,86,219,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,-apple-system,sans-serif;background:var(--g50);color:var(--g900);-webkit-font-smoothing:antialiased}
+
+/* ── 탭 네비 ─────────────────────────────────── */
+.topbar{background:#fff;border-bottom:1px solid var(--g200);height:60px;display:flex;align-items:center;padding:0 32px;gap:8px;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:center;gap:8px;margin-right:24px}
+.logo-icon{width:34px;height:34px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.logo-text{font-weight:900;font-size:16px;color:var(--g900)}
+.logo-sub{font-size:10px;color:var(--g400)}
+.tab-btn{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--g600);transition:.15s;white-space:nowrap}
+.tab-btn:hover{background:var(--g100);color:var(--g900)}
+.tab-btn.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,.25)}
+.group-badge{margin-left:auto;padding:4px 14px;background:rgba(26,86,219,.08);color:var(--blue);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em}
+
+/* ── 화면 캔버스 ─────────────────────────────── */
+.screen{display:none;width:1280px;min-height:800px;padding:28px 32px 32px}
+.screen.active{display:block}
+
+/* ── 공통 카드 ──────────────────────────────── */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:20px;border:1px solid var(--g200)}
+.card-sm{background:#fff;border-radius:10px;box-shadow:var(--sh);padding:14px 16px;border:1px solid var(--g200)}
+.section-tag{display:inline-block;padding:3px 10px;background:rgba(26,86,219,.08);color:var(--blue);border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── 스크린 헤더 ────────────────────────────── */
+.screen-header{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}
+.screen-header-left{}
+.screen-num{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.screen-title{font-size:22px;font-weight:900;color:var(--g900);line-height:1.25}
+.screen-desc{font-size:13px;color:var(--g400);margin-top:4px}
+
+/* ── 메시지 배너 ─────────────────────────────── */
+.msg-banner{margin-top:20px;background:linear-gradient(135deg,var(--navy) 0%,#0f2c5a 60%,#1a3a7a 100%);border-radius:12px;padding:14px 22px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.msg-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 50%,rgba(26,86,219,.3) 0%,transparent 60%),linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:auto,40px 40px,40px 40px}
+.msg-arrow{font-size:20px;background:rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;color:#fff;font-weight:900;white-space:nowrap;position:relative;z-index:1}
+.msg-text{color:rgba(255,255,255,.95);font-size:13px;font-weight:600;line-height:1.5;position:relative;z-index:1}
+.msg-label{font-size:10px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:2px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ── 점수 바 ─────────────────────────────────── */
+.score-bar{height:7px;border-radius:4px;background:var(--g200);overflow:hidden;margin-top:5px}
+.score-fill{height:100%;border-radius:4px;transition:width .6s}
+
+/* ── 그리드 헬퍼 ─────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.col-span-2{grid-column:span 2}
+
+/* ── 태그 칩 ─────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.chip-blue{background:rgba(59,130,246,.1);color:#1d4ed8}
+.chip-green{background:rgba(16,185,129,.1);color:#047857}
+.chip-amber{background:rgba(245,158,11,.1);color:#b45309}
+.chip-red{background:rgba(239,68,68,.1);color:#b91c1c}
+.chip-purple{background:rgba(139,92,246,.1);color:#6d28d9}
+.chip-teal{background:rgba(14,165,233,.1);color:#0369a1}
+.chip-gray{background:var(--g100);color:var(--g600)}
+.chip-orange{background:rgba(249,115,22,.1);color:#c2410c}
+
+/* ── 리스트 아이템 ──────────────────────────── */
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--g100)}
+.list-row:last-child{border-bottom:none}
+.list-key{font-size:12px;color:var(--g600)}
+.list-val{font-size:12px;font-weight:700;color:var(--g900)}
+
+/* ── 등급 배지 ──────────────────────────────── */
+.grade{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-weight:900;font-size:14px}
+.grade-A{background:#dcfce7;color:#15803d;border:2px solid #15803d}
+.grade-B{background:#dbeafe;color:#1d4ed8;border:2px solid #1d4ed8}
+.grade-C{background:#fef9c3;color:#b45309;border:2px solid #b45309}
+.grade-ok{background:#dcfce7;color:#15803d;border:2px solid #15803d}
+.grade-warn{background:#fef9c3;color:#b45309;border:2px solid #b45309}
+
+/* ── 사이드바 섹션 타이틀 ────────────────────── */
+.side-title{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+
+/* ── 수치 강조 ─────────────────────────────── */
+.stat-box{text-align:center;padding:14px 10px}
+.stat-num{font-size:24px;font-weight:900;line-height:1}
+.stat-lbl{font-size:10px;color:var(--g400);margin-top:4px}
+
+/* ── 결과 아이템 (pass/warn/fail) ─────────── */
+.result-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:9px;margin-bottom:5px}
+.result-pass{background:#f0fdf4;border-left:3px solid var(--green)}
+.result-warn{background:#fffbeb;border-left:3px solid var(--amber)}
+.result-fail{background:#fef2f2;border-left:3px solid var(--red)}
+
+/* ── 리스크 아이템 ──────────────────────────── */
+.risk-item{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:8px;margin-bottom:6px}
+.risk-high{background:#fef2f2;border-left:3px solid var(--red)}
+.risk-mid{background:#fffbeb;border-left:3px solid var(--amber)}
+.risk-low{background:#f0fdf4;border-left:3px solid var(--green)}
+
+/* ── 테이블 ─────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--g50);color:var(--g600);font-weight:700;padding:8px 12px;text-align:left;border-bottom:2px solid var(--g200)}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--g100);color:var(--g900)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--g50)}
+
+/* ── 진행 스텝 ──────────────────────────────── */
+.step-flow{display:flex;align-items:center;gap:0;margin-bottom:22px;background:#fff;border:1px solid var(--g200);border-radius:12px;padding:14px 20px;box-shadow:var(--sh)}
+.step-node{display:flex;flex-direction:column;align-items:center;gap:4px}
+.step-circle{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.step-line{flex:1;height:2px;min-width:24px}
+.step-label{font-size:10px;font-weight:700;margin-top:3px;text-align:center}
+.step-sub{font-size:9px;color:var(--g400);text-align:center}
+
+/* ── 플로우 화살표 ──────────────────────────── */
+.flow-arrow{display:flex;align-items:center;justify-content:center;color:var(--g400);font-size:18px;font-weight:300;padding:0 4px}
+
+/* ── 하중 셀 ─────────────────────────────────── */
+.load-cell{background:var(--g50);border:1px solid var(--g200);border-radius:9px;padding:11px 13px;display:flex;flex-direction:column;gap:2px;transition:.15s}
+.load-cell.active{background:rgba(26,86,219,.04);border-color:rgba(26,86,219,.25);box-shadow:0 2px 8px rgba(26,86,219,.06)}
+.load-cell-label{font-size:9px;color:var(--g400);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.load-cell-val{font-size:18px;font-weight:900;color:var(--g900);line-height:1.1}
+.load-cell-unit{font-size:10px;color:var(--g600)}
+
+/* ── 접합부 행 ───────────────────────────────── */
+.joint-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--g50);border:1px solid var(--g200);border-radius:9px;margin-bottom:6px;transition:.15s}
+.joint-row:hover{border-color:rgba(26,86,219,.3);background:rgba(26,86,219,.02)}
+.joint-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.joint-name{font-size:12px;font-weight:700;color:var(--g900)}
+.joint-spec{font-size:10px;color:var(--g600);margin-top:1px}
+
+/* ── 3D 구조 뷰 박스 ─────────────────────────── */
+.struct-view{background:linear-gradient(160deg,#0a1628 0%,#0f2c5a 50%,#0a2240 100%);border-radius:0 0 10px 10px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.struct-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.05) 1px,transparent 1px);background-size:28px 28px}
+
+/* ── 게이지 바 ───────────────────────────────── */
+.gauge-bar{height:6px;background:var(--g200);border-radius:4px;overflow:visible;position:relative;margin-top:5px}
+.gauge-fill{height:100%;border-radius:4px;transition:width .6s}
+.gauge-limit{position:absolute;top:-3px;width:2px;height:12px;background:var(--red);border-radius:1px;opacity:.55}
+
+/* ── 수정 대안 카드 ──────────────────────────── */
+.alt-card{border:1.5px solid var(--g200);border-radius:10px;padding:14px;margin-bottom:8px;background:#fff;transition:.15s;cursor:pointer}
+.alt-card:hover{border-color:rgba(26,86,219,.3);box-shadow:0 4px 12px rgba(26,86,219,.07)}
+.alt-card.selected{border-color:var(--blue);background:rgba(26,86,219,.025);box-shadow:0 4px 14px rgba(26,86,219,.1)}
+
+/* ── 기준 DB 레코드 ──────────────────────────── */
+.cr-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--g100);transition:.1s}
+.cr-row:last-child{border-bottom:none}
+.cr-row:hover{background:var(--g50)}
+.cr-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0}
+.cr-body{flex:1;min-width:0}
+.cr-name{font-size:12px;font-weight:700;color:var(--g900)}
+.cr-meta{font-size:10px;color:var(--g400);margin-top:1px}
+.cr-val{font-size:13px;font-weight:800;min-width:55px;text-align:right}
+
+/* ── DB 필터 탭 ──────────────────────────────── */
+.filter-tab{padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--g200);color:var(--g600);background:#fff;transition:.15s}
+.filter-tab:hover{border-color:rgba(26,86,219,.3);color:var(--blue)}
+.filter-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ── 매트릭스 셀 ─────────────────────────────── */
+.mx-cell{padding:5px 7px;border-radius:6px;text-align:center;font-size:10px;font-weight:700}
+.mx-green{background:#dcfce7;color:#15803d}
+.mx-blue{background:rgba(26,86,219,.08);color:var(--blue);border:1.5px solid rgba(26,86,219,.2)}
+.mx-amber{background:#fef9c3;color:#b45309}
+.mx-gray{background:var(--g100);color:var(--g400)}
+
+/* ── 학습 바 ─────────────────────────────────── */
+.learn-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--g50);border:1px solid var(--g200);border-radius:9px;margin-bottom:6px}
+.learn-icon{font-size:18px;flex-shrink:0}
+.learn-body{flex:1}
+.learn-title{font-size:12px;font-weight:700;color:var(--g900)}
+.learn-sub{font-size:10px;color:var(--g400);margin-top:1px}
+.learn-val{font-size:18px;font-weight:900;color:var(--blue);flex-shrink:0}
+
+/* ── 진행 바 ─────────────────────────────────── */
+.prog-wrap{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.prog-top{display:flex;justify-content:space-between;font-size:11px}
+.prog-track{height:6px;background:var(--g200);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;transition:width .6s}
+
+/* ── 타임라인 ────────────────────────────────── */
+.tl-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--g100)}
+.tl-item:last-child{border-bottom:none}
+.tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px}
+.tl-body{flex:1}
+.tl-date{font-size:10px;color:var(--g400);font-weight:500}
+.tl-title{font-size:12px;font-weight:700;color:var(--g900);margin-top:2px}
+.tl-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+
+/* ── 재사용 패턴 바 ─────────────────────────── */
+.reuse-row{display:flex;align-items:center;gap:10px;padding:7px 0}
+.reuse-label{font-size:11px;color:var(--g600);flex:0 0 130px}
+.reuse-track{flex:1;height:6px;background:var(--g200);border-radius:4px;overflow:hidden}
+.reuse-fill{height:100%;border-radius:4px}
+
+/* ── 누적 추이 차트 ─────────────────────────── */
+.trend-chart{display:flex;align-items:flex-end;gap:5px;height:64px}
+.trend-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.trend-bar-fill{width:100%;border-radius:3px 3px 0 0}
+.trend-val{font-size:9px;font-weight:700}
+.trend-lbl{font-size:9px;color:var(--g400)}
+
+/* ── 단면 비교 ───────────────────────────────── */
+.section-compare{display:flex;align-items:center;justify-content:center;gap:20px;padding:8px 0}
+
+/* ── 구속 조건 노드 ─────────────────────────── */
+.cn-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--g50);border:1px solid var(--g200);border-radius:9px;margin-bottom:6px}
+.cn-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.cn-body{flex:1}
+.cn-name{font-size:12px;font-weight:700;color:var(--g900)}
+.cn-desc{font-size:10px;color:var(--g600);margin-top:1px}
+.cn-status{text-align:right;flex-shrink:0}
+
+/* ── 접합부 상세 카드 ────────────────────────── */
+.jd-card{border:1px solid var(--g200);border-radius:9px;padding:12px 14px;margin-bottom:7px;background:#fff}
+.jd-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.jd-title{font-size:12px;font-weight:700;color:var(--g900)}
+.jd-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.jd-cell{background:var(--g50);border-radius:6px;padding:6px 9px}
+.jd-key{font-size:9px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.jd-val{font-size:13px;font-weight:800;color:var(--g900);margin-top:1px}
+
+/* ── FEM 스트레스 맵 ─────────────────────────── */
+.stress-map{background:var(--navy);border-radius:0 0 10px 10px;overflow:hidden;position:relative}
+.stress-legend{position:absolute;right:10px;top:10px;background:rgba(10,22,40,.9);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 10px}
+.leg-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.leg-swatch{width:14px;height:5px;border-radius:2px;flex-shrink:0}
+.leg-text{font-size:9px;color:rgba(255,255,255,.7)}
+
+/* ── 버튼 ────────────────────────────────────── */
+.btn-primary{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(26,86,219,.25);transition:.15s;white-space:nowrap}
+.btn-primary:hover{background:#1848c8;box-shadow:0 4px 14px rgba(26,86,219,.3)}
+.btn-outline{background:#fff;color:var(--blue);border:1.5px solid rgba(26,86,219,.35);border-radius:9px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn-outline:hover{background:rgba(26,86,219,.04)}
+.btn-amber{background:var(--amber);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(245,158,11,.2);transition:.15s;white-space:nowrap}
+.btn-amber:hover{background:#d97706}
+.btn-green{background:var(--green);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(16,185,129,.2);transition:.15s;white-space:nowrap}
+.btn-green:hover{background:#059669}
+
+/* ── 구속조건 뱃지 ───────────────────────────── */
+.constraint-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700}
+
+/* ── 검토항목 체크 ───────────────────────────── */
+.check-item{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;border-radius:8px;margin-bottom:4px}
+
+/* ── 흐름 다이어그램 ─────────────────────────── */
+.flow-step{display:flex;align-items:center;gap:0}
+.flow-node{padding:6px 12px;border-radius:7px;font-size:10px;font-weight:700;text-align:center}
+.flow-connector{flex:0 0 auto;padding:0 5px;color:var(--g400);font-size:13px}
+
+/* ── 아이콘 박스 ─────────────────────────────── */
+.icon-box{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+
+/* ── 스크롤바 ────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ══ 탑바 ══════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">UnitBuild</div>
+      <div class="logo-sub">모듈러 구조검토 자동화</div>
+    </div>
+  </div>
+  <button class="tab-btn active" onclick="showTab(0)">① 구조검토 입력 구성</button>
+  <button class="tab-btn" onclick="showTab(1)">② 구조 안정성 검토 결과</button>
+  <button class="tab-btn" onclick="showTab(2)">③ 구조 수정·구속조건 재설계</button>
+  <button class="tab-btn" onclick="showTab(3)">④ 기준 축적 및 판단체계</button>
+  <div class="group-badge">🏗️ 그룹 D — 구조 검토</div>
+</div>
+
+<script>
+function showTab(i){
+  document.querySelectorAll('.screen').forEach((s,idx)=>s.classList.toggle('active',idx===i));
+  document.querySelectorAll('.tab-btn').forEach((b,idx)=>b.classList.toggle('active',idx===i));
+}
+function filterDB(cat,el){
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.cr-row[data-cat]').forEach(r=>{
+    r.style.display=(cat==='all'||r.dataset.cat===cat)?'':'none';
+  });
+}
+</script>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN #27 — 구조검토 입력 구성
+══════════════════════════════════════════════════════ -->
+<div class="screen active">
+
+  <div class="screen-header">
+    <div class="screen-header-left">
+      <div class="screen-num">SCREEN #27 · 그룹 D — 구조 검토</div>
+      <div class="screen-title">구조검토 입력 구성 화면</div>
+      <div class="screen-desc">모듈 사양 선택 → 하중조건 설정 → 접합부 구성 → 구조해석 실행</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="chip chip-blue">S-18 모듈</span>
+      <span class="chip chip-amber">3층 스택</span>
+      <span class="chip chip-purple">내진 특등급</span>
+    </div>
+  </div>
+
+  <!-- 진행 스텝 -->
+  <div class="step-flow">
+    <div class="step-node">
+      <div class="step-circle" style="background:var(--blue);color:#fff">1</div>
+      <div class="step-label" style="color:var(--blue)">입력 구성</div>
+      <div class="step-sub">진행 중</div>
+    </div>
+    <div class="step-line" style="background:linear-gradient(90deg,var(--blue),var(--g200))"></div>
+    <div class="step-node">
+      <div class="step-circle" style="background:var(--g100);color:var(--g400)">2</div>
+      <div class="step-label" style="color:var(--g400)">FEM 해석</div>
+      <div class="step-sub">대기</div>
+    </div>
+    <div class="step-line" style="background:var(--g200)"></div>
+    <div class="step-node">
+      <div class="step-circle" style="background:var(--g100);color:var(--g400)">3</div>
+      <div class="step-label" style="color:var(--g400)">결과 검토</div>
+      <div class="step-sub">대기</div>
+    </div>
+    <div class="step-line" style="background:var(--g200)"></div>
+    <div class="step-node">
+      <div class="step-circle" style="background:var(--g100);color:var(--g400)">4</div>
+      <div class="step-label" style="color:var(--g400)">수정·재설계</div>
+      <div class="step-sub">대기</div>
+    </div>
+    <div class="step-line" style="background:var(--g200)"></div>
+    <div class="step-node">
+      <div class="step-circle" style="background:var(--g100);color:var(--g400)">5</div>
+      <div class="step-label" style="color:var(--g400)">기준 축적</div>
+      <div class="step-sub">대기</div>
+    </div>
+    <div style="margin-left:auto">
+      <button class="btn-primary" onclick="showTab(1)">▶ 구조해석 실행</button>
+    </div>
+  </div>
+
+  <!-- 메인 3열 -->
+  <div style="display:grid;grid-template-columns:1.1fr 1fr 0.9fr;gap:16px">
+
+    <!-- LEFT: 3D 모델 + 모듈 사양 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 3D 모델 뷰 -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <span style="font-size:13px;font-weight:700;color:var(--g900)">모듈 구조 3D 모델</span>
+            <span style="font-size:11px;color:var(--g400);margin-left:6px">S-18 Type</span>
+          </div>
+          <div style="display:flex;gap:5px"><span class="chip chip-blue">3층 × 2스팬</span></div>
+        </div>
+        <div class="struct-view" style="height:218px">
+          <div class="struct-grid"></div>
+          <svg width="340" height="212" viewBox="0 0 340 212" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:2">
+            <defs>
+              <filter id="gf1"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              <linearGradient id="cg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient>
+            </defs>
+            <!-- Floor plates (3 floors) -->
+            <polygon points="55,170 175,128 295,170 175,212" fill="rgba(30,58,138,.3)" stroke="rgba(96,165,250,.4)" stroke-width="1"/>
+            <polygon points="55,118 175,76 295,118 175,160" fill="rgba(30,58,138,.22)" stroke="rgba(96,165,250,.32)" stroke-width="1"/>
+            <polygon points="55,66 175,24 295,66 175,108" fill="rgba(16,185,129,.1)" stroke="rgba(52,211,153,.25)" stroke-width="1"/>
+            <!-- Column left -->
+            <rect x="52" y="14" width="5" height="157" fill="url(#cg1)" filter="url(#gf1)"/>
+            <!-- Column center -->
+            <rect x="172" y="-28" width="5" height="157" fill="url(#cg1)" filter="url(#gf1)"/>
+            <!-- Column right -->
+            <rect x="292" y="14" width="5" height="157" fill="rgba(96,165,250,.6)"/>
+            <!-- Beams 1FL -->
+            <line x1="55" y1="170" x2="175" y2="128" stroke="rgba(96,165,250,.75)" stroke-width="2.5" filter="url(#gf1)"/>
+            <line x1="175" y1="128" x2="295" y2="170" stroke="rgba(96,165,250,.75)" stroke-width="2.5"/>
+            <!-- Beams 2FL -->
+            <line x1="55" y1="118" x2="175" y2="76" stroke="rgba(96,165,250,.65)" stroke-width="2.5"/>
+            <line x1="175" y1="76" x2="295" y2="118" stroke="rgba(96,165,250,.65)" stroke-width="2.5"/>
+            <!-- Beams 3FL (special - green) -->
+            <line x1="55" y1="66" x2="175" y2="24" stroke="rgba(52,211,153,.7)" stroke-width="2.5" filter="url(#gf1)"/>
+            <line x1="175" y1="24" x2="295" y2="66" stroke="rgba(52,211,153,.7)" stroke-width="2.5"/>
+            <!-- X-Braces 3FL (seismic) -->
+            <line x1="55" y1="66" x2="175" y2="118" stroke="rgba(139,92,246,.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="175" y1="66" x2="295" y2="118" stroke="rgba(139,92,246,.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <!-- Joint dots -->
+            <circle cx="55" cy="170" r="5" fill="#60a5fa" filter="url(#gf1)"/>
+            <circle cx="175" cy="128" r="5" fill="#60a5fa" filter="url(#gf1)"/>
+            <circle cx="295" cy="170" r="4" fill="#60a5fa"/>
+            <circle cx="55" cy="118" r="4" fill="#60a5fa"/>
+            <circle cx="175" cy="76" r="4" fill="#60a5fa"/>
+            <circle cx="295" cy="118" r="4" fill="#60a5fa"/>
+            <circle cx="55" cy="66" r="4" fill="#34d399" filter="url(#gf1)"/>
+            <circle cx="175" cy="24" r="4" fill="#34d399" filter="url(#gf1)"/>
+            <circle cx="295" cy="66" r="4" fill="#34d399"/>
+            <!-- Labels -->
+            <text x="303" y="57" fill="rgba(52,211,153,.85)" font-size="9" font-weight="700">3FL ★</text>
+            <text x="303" y="109" fill="rgba(96,165,250,.75)" font-size="9">2FL</text>
+            <text x="303" y="161" fill="rgba(96,165,250,.65)" font-size="9">1FL</text>
+            <text x="62" y="148" fill="rgba(96,165,250,.65)" font-size="8">H-200×100</text>
+            <text x="78" y="94" fill="rgba(139,92,246,.65)" font-size="7">내진가새</text>
+            <!-- Dimension lines -->
+            <line x1="20" y1="170" x2="20" y2="14" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+            <text x="10" y="95" fill="rgba(255,255,255,.28)" font-size="8" writing-mode="tb">8.4 m</text>
+            <line x1="55" y1="206" x2="295" y2="206" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+            <text x="167" y="212" fill="rgba(255,255,255,.28)" font-size="8" text-anchor="middle">9.6 m</text>
+          </svg>
+          <!-- Legend bottom -->
+          <div style="position:absolute;bottom:8px;right:10px;display:flex;gap:10px;align-items:center;background:rgba(10,22,40,.7);border-radius:6px;padding:4px 8px;backdrop-filter:blur(4px)">
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:2px;background:#60a5fa;border-radius:1px"></div><span style="font-size:8px;color:rgba(255,255,255,.6)">H형강</span></div>
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:2px;background:#34d399;border-radius:1px"></div><span style="font-size:8px;color:rgba(255,255,255,.6)">접합부</span></div>
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:14px;height:0;border-top:2px dashed #a78bfa"></div><span style="font-size:8px;color:rgba(255,255,255,.6)">가새</span></div>
+          </div>
+          <!-- Top label -->
+          <div style="position:absolute;top:8px;left:10px;background:rgba(10,22,40,.8);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:5px 10px">
+            <div style="font-size:9px;color:#93c5fd;font-weight:700">S-18 구조 시스템</div>
+            <div style="font-size:8px;color:rgba(255,255,255,.45)">경량 스틸 + 모듈러 접합</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 모듈 사양 -->
+      <div class="card">
+        <div class="side-title">모듈 구조 사양 · UnitHaus S-18</div>
+        <div class="list-row">
+          <span class="list-key">모듈 치수</span>
+          <span class="list-val">3,200 × 9,600 × 2,800 mm</span>
+        </div>
+        <div class="list-row">
+          <span class="list-key">기둥 부재</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="list-val">H-200×100×5.5×8 (SS275)</span>
+            <span class="chip chip-blue" style="font-size:9px">4개소</span>
+          </div>
+        </div>
+        <div class="list-row">
+          <span class="list-key">보 부재</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="list-val">H-150×75×5×7 (SS275)</span>
+            <span class="chip chip-gray" style="font-size:9px">경보</span>
+          </div>
+        </div>
+        <div class="list-row">
+          <span class="list-key">바닥판</span>
+          <span class="list-val">합성 데크 150mm (f'c=24MPa)</span>
+        </div>
+        <div class="list-row">
+          <span class="list-key">내진 설계</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="list-val">특등급 (KBC 2019)</span>
+            <span class="chip chip-green" style="font-size:9px">적용</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 층별 적층 구성 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">층별 모듈 적층 구성</div>
+        <div style="display:flex;gap:6px">
+          <div style="flex:1;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:#15803d;font-weight:700;margin-bottom:2px">3층</div>
+            <div style="font-size:16px;font-weight:900;color:var(--g900)">2세대</div>
+            <div style="font-size:9px;color:var(--g400)">S-18</div>
+          </div>
+          <div style="flex:1;background:rgba(26,86,219,.04);border:1px solid rgba(26,86,219,.18);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:var(--blue);font-weight:700;margin-bottom:2px">2층</div>
+            <div style="font-size:16px;font-weight:900;color:var(--g900)">2세대</div>
+            <div style="font-size:9px;color:var(--g400)">S-18</div>
+          </div>
+          <div style="flex:1;background:rgba(26,86,219,.04);border:1px solid rgba(26,86,219,.18);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:var(--blue);font-weight:700;margin-bottom:2px">1층</div>
+            <div style="font-size:16px;font-weight:900;color:var(--g900)">2세대</div>
+            <div style="font-size:9px;color:var(--g400)">S-18</div>
+          </div>
+          <div style="flex:1;background:#fef9c3;border:1px solid #fcd34d;border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:9px;color:#b45309;font-weight:700;margin-bottom:2px">지하</div>
+            <div style="font-size:16px;font-weight:900;color:var(--g900)">기초</div>
+            <div style="font-size:9px;color:var(--g400)">독립기초</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: 하중 + 접합부 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 하중 조건 -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">⚖️ 하중 조건 설정</span>
+          <span class="chip chip-amber">KBC / ASCE 기준</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+          <div class="load-cell active">
+            <div class="load-cell-label">고정하중 DL</div>
+            <div class="load-cell-val" style="color:var(--blue)">4.2</div>
+            <div class="load-cell-unit">kN/m²</div>
+          </div>
+          <div class="load-cell active">
+            <div class="load-cell-label">활하중 LL</div>
+            <div class="load-cell-val" style="color:var(--blue)">2.0</div>
+            <div class="load-cell-unit">kN/m² (주거)</div>
+          </div>
+          <div class="load-cell">
+            <div class="load-cell-label">적설하중 SL</div>
+            <div class="load-cell-val" style="color:var(--amber)">0.5</div>
+            <div class="load-cell-unit">kN/m² (서울)</div>
+          </div>
+          <div class="load-cell">
+            <div class="load-cell-label">풍하중 WL</div>
+            <div class="load-cell-val" style="color:var(--amber)">1.25</div>
+            <div class="load-cell-unit">kN/m² (35m/s)</div>
+          </div>
+          <div class="load-cell active">
+            <div class="load-cell-label">지진하중 EL</div>
+            <div class="load-cell-val" style="color:var(--green)">0.22g</div>
+            <div class="load-cell-unit">SDS (Zone I)</div>
+          </div>
+          <div class="load-cell">
+            <div class="load-cell-label">조합 하중</div>
+            <div class="load-cell-val" style="color:var(--purple);font-size:14px">1.2D</div>
+            <div class="load-cell-unit">+1.6L+0.5S</div>
+          </div>
+        </div>
+        <!-- 하중 전달 경로 -->
+        <div style="padding:10px 12px;background:var(--g50);border:1px solid var(--g200);border-radius:8px">
+          <div class="side-title" style="margin-bottom:7px">수직 하중 전달 경로</div>
+          <div style="display:flex;align-items:center;gap:0">
+            <div style="flex:1;text-align:center;padding:5px;background:#f0fdf4;border:1px solid #86efac;border-radius:5px;font-size:9px;font-weight:700;color:#15803d">지붕</div>
+            <div style="padding:0 5px;color:var(--g400);font-size:12px">→</div>
+            <div style="flex:1;text-align:center;padding:5px;background:rgba(26,86,219,.05);border:1px solid rgba(26,86,219,.18);border-radius:5px;font-size:9px;font-weight:700;color:var(--blue)">보→기둥</div>
+            <div style="padding:0 5px;color:var(--g400);font-size:12px">→</div>
+            <div style="flex:1;text-align:center;padding:5px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.18);border-radius:5px;font-size:9px;font-weight:700;color:var(--purple)">접합부</div>
+            <div style="padding:0 5px;color:var(--g400);font-size:12px">→</div>
+            <div style="flex:1;text-align:center;padding:5px;background:#fef9c3;border:1px solid #fcd34d;border-radius:5px;font-size:9px;font-weight:700;color:#b45309">기초</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 접합부 구성 -->
+      <div class="card" style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">🔩 접합부 구성</span>
+          <span class="chip chip-gray">4유형</span>
+        </div>
+        <div class="joint-row">
+          <div class="joint-icon" style="background:rgba(26,86,219,.08)">🔗</div>
+          <div style="flex:1">
+            <div class="joint-name">모듈-모듈 적층 접합</div>
+            <div class="joint-spec">볼트 M20 × 8본 / HSB800 · 수직전단+인발</div>
+          </div>
+          <span class="chip chip-blue" style="font-size:10px">주 접합</span>
+        </div>
+        <div class="joint-row">
+          <div class="joint-icon" style="background:rgba(16,185,129,.08)">⚙️</div>
+          <div style="flex:1">
+            <div class="joint-name">기둥-보 강접합 (Moment)</div>
+            <div class="joint-spec">완전용입 용접 + Stiffener · 내진 특등급</div>
+          </div>
+          <span class="chip chip-green" style="font-size:10px">특수 접합</span>
+        </div>
+        <div class="joint-row">
+          <div class="joint-icon" style="background:rgba(245,158,11,.08)">🔧</div>
+          <div style="flex:1">
+            <div class="joint-name">기초-기둥 앵커 접합</div>
+            <div class="joint-spec">케미컬 앵커 D25×450 × 4본 / 에폭시</div>
+          </div>
+          <span class="chip chip-amber" style="font-size:10px">기초 접합</span>
+        </div>
+        <div class="joint-row" style="border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.02)">
+          <div class="joint-icon" style="background:rgba(139,92,246,.08)">🛡️</div>
+          <div style="flex:1">
+            <div class="joint-name">내진 가새 접합 (Brace)</div>
+            <div class="joint-spec">원형 강관 φ100×4 / 판게이지+슬롯홀</div>
+          </div>
+          <span class="chip chip-purple" style="font-size:10px">내진 보강</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: 해석 방법 + 매개변수 + 검토항목 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 해석 방법 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">해석 방법 선택</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="padding:10px 12px;background:rgba(26,86,219,.04);border:1.5px solid rgba(26,86,219,.28);border-radius:9px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--blue)">● 선형 정적 해석</div>
+                <div style="font-size:10px;color:var(--g400);margin-top:2px">등가 정적법 · KBC 2019</div>
+              </div>
+              <span class="chip chip-blue" style="font-size:10px">선택됨</span>
+            </div>
+          </div>
+          <div style="padding:9px 12px;background:var(--g50);border:1px solid var(--g200);border-radius:9px;opacity:.6">
+            <div style="font-size:12px;color:var(--g600)">○ 응답스펙트럼 해석</div>
+            <div style="font-size:10px;color:var(--g400);margin-top:1px">모드중첩법 · SRSS</div>
+          </div>
+          <div style="padding:9px 12px;background:var(--g50);border:1px solid var(--g200);border-radius:9px;opacity:.6">
+            <div style="font-size:12px;color:var(--g600)">○ 비선형 정적 해석</div>
+            <div style="font-size:10px;color:var(--g400);margin-top:1px">Push-over · 성능설계</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 구조 핵심 매개변수 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">구조 핵심 매개변수</div>
+        <div class="list-row">
+          <span class="list-key">강재 항복강도</span>
+          <span class="list-val" style="color:var(--blue)">SS275 · 275 MPa</span>
+        </div>
+        <div class="list-row">
+          <span class="list-key">세장비 제한</span>
+          <span class="list-val">기둥 λ≤200 / 보 λ≤300</span>
+        </div>
+        <div class="list-row">
+          <span class="list-key">처짐 허용치</span>
+          <span class="list-val">L/360 (활하중 기준)</span>
+        </div>
+        <div class="list-row">
+          <span class="list-key">층간 변위각</span>
+          <span class="list-val" style="color:var(--blue)">1/200 이하 (내진 특등급)</span>
+        </div>
+        <div class="list-row">
+          <span class="list-key">접합부 안전율</span>
+          <span class="list-val">인장 ≥2.0 / 전단 ≥1.75</span>
+        </div>
+      </div>
+
+      <!-- 검토 항목 -->
+      <div class="card" style="flex:1">
+        <div class="side-title" style="margin-bottom:10px">검토 항목 설정</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div class="check-item" style="background:#f0fdf4">
+            <span style="font-size:11px;color:var(--g900)">✅ 단면 강도 검토</span>
+            <span class="chip chip-green" style="font-size:9px">자동</span>
+          </div>
+          <div class="check-item" style="background:#f0fdf4">
+            <span style="font-size:11px;color:var(--g900)">✅ 처짐 / 변형 검토</span>
+            <span class="chip chip-green" style="font-size:9px">자동</span>
+          </div>
+          <div class="check-item" style="background:#f0fdf4">
+            <span style="font-size:11px;color:var(--g900)">✅ 접합부 응력 검토</span>
+            <span class="chip chip-green" style="font-size:9px">자동</span>
+          </div>
+          <div class="check-item" style="background:#f0fdf4">
+            <span style="font-size:11px;color:var(--g900)">✅ 내진 성능 검토</span>
+            <span class="chip chip-green" style="font-size:9px">자동</span>
+          </div>
+          <div class="check-item" style="background:rgba(26,86,219,.04)">
+            <span style="font-size:11px;color:var(--g900)">✅ 운반 하중 검토</span>
+            <span class="chip chip-blue" style="font-size:9px">추가</span>
+          </div>
+          <div class="check-item" style="background:var(--g50);opacity:.6">
+            <span style="font-size:11px;color:var(--g600)">☐ 비선형 좌굴 해석</span>
+            <span class="chip chip-gray" style="font-size:9px">선택</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <div style="flex:1;text-align:center;padding:10px;background:var(--g50);border:1px solid var(--g200);border-radius:9px">
+            <div style="font-size:10px;color:var(--g400)">예상 해석 시간</div>
+            <div style="font-size:18px;font-weight:900;color:var(--blue)">약 3분</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:10px;background:var(--g50);border:1px solid var(--g200);border-radius:9px">
+            <div style="font-size:10px;color:var(--g400)">검토 항목 수</div>
+            <div style="font-size:18px;font-weight:900;color:var(--g900)">12개</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div><div class="msg-label">전달 메시지</div><div class="msg-arrow">입력 → 구조 해석</div></div>
+    <div class="msg-text">모듈 사양·하중·접합부 조건을 <strong>표준화된 입력 체계</strong>로 자동 변환하여 FEM 해석 엔진에 직접 전달한다.<br>경험 기반 수작업 설정이 아닌, 비교 가능한 구조화 데이터 기반의 정량 해석 체계를 구현함.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN #28 — 구조 안정성 및 접합부 검토 결과
+══════════════════════════════════════════════════════ -->
+<div class="screen">
+
+  <div class="screen-header">
+    <div class="screen-header-left">
+      <div class="screen-num">SCREEN #28 · 그룹 D — 구조 검토</div>
+      <div class="screen-title">구조 안정성 및 접합부 검토 결과 화면</div>
+      <div class="screen-desc">선형 정적 해석 결과 · S-18 모듈 3층 스택 구조 · KBC 2019 기준</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="chip chip-teal">KBC 2019</span>
+      <span class="chip chip-green">11 PASS</span>
+      <span class="chip chip-amber">1 WARN</span>
+    </div>
+  </div>
+
+  <!-- 상단 KPI 카드 4개 -->
+  <div class="grid-4" style="margin-bottom:16px">
+    <div style="background:#fff;border-radius:var(--r);border:2px solid var(--green);box-shadow:0 4px 16px rgba(16,185,129,.1);padding:16px;text-align:center">
+      <div style="font-size:10px;color:#047857;font-weight:700;margin-bottom:4px">구조 안전성</div>
+      <div style="font-size:28px;font-weight:900;color:var(--green)">OK</div>
+      <div style="font-size:11px;color:#047857;margin-top:2px">적합 판정</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div style="font-size:10px;color:var(--g400);margin-bottom:4px">검토 항목</div>
+      <div style="font-size:28px;font-weight:900;color:var(--g900)">12</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:2px">전 항목 기준</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div style="font-size:10px;color:#047857;margin-bottom:4px">통과 (Pass)</div>
+      <div style="font-size:28px;font-weight:900;color:var(--green)">11</div>
+      <div style="font-size:11px;color:#047857;margin-top:2px">91.7 %</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--amber);box-shadow:0 4px 16px rgba(245,158,11,.08);padding:16px;text-align:center">
+      <div style="font-size:10px;color:#b45309;font-weight:700;margin-bottom:4px">주의 (Warn)</div>
+      <div style="font-size:28px;font-weight:900;color:var(--amber)">1</div>
+      <div style="font-size:11px;color:#b45309;margin-top:2px">보완 권고</div>
+    </div>
+  </div>
+
+  <!-- 메인 3열 -->
+  <div style="display:grid;grid-template-columns:1fr 1.1fr 0.9fr;gap:16px">
+
+    <!-- LEFT: 검토 결과 목록 + 운반 검토 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card" style="padding:0;overflow:hidden;flex:1">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--g100);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">구조 안전성 검토 결과</span>
+          <span class="chip chip-teal">KBC 2019</span>
+        </div>
+        <div style="padding:12px 14px;display:flex;flex-direction:column;gap:0">
+
+          <div class="result-item result-pass">
+            <div style="font-size:14px;margin-top:1px">✅</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">기둥 압축 강도</div>
+              <div style="font-size:10px;color:var(--g400)">H-200×100 · 최대 축력 82.4 kN</div>
+              <div class="gauge-bar"><div class="gauge-fill" style="width:48%;background:var(--green)"></div><div class="gauge-limit" style="left:80%"></div></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:16px;font-weight:900;color:var(--green)">0.48</div>
+              <div style="font-size:9px;color:var(--g400)">≤ 1.0 OK</div>
+            </div>
+          </div>
+
+          <div class="result-item result-pass">
+            <div style="font-size:14px;margin-top:1px">✅</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">보 휨 강도</div>
+              <div style="font-size:10px;color:var(--g400)">H-150×75 · 최대 모멘트 18.6 kN·m</div>
+              <div class="gauge-bar"><div class="gauge-fill" style="width:62%;background:var(--green)"></div><div class="gauge-limit" style="left:80%"></div></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:16px;font-weight:900;color:var(--green)">0.62</div>
+              <div style="font-size:9px;color:var(--g400)">≤ 1.0 OK</div>
+            </div>
+          </div>
+
+          <div class="result-item result-pass">
+            <div style="font-size:14px;margin-top:1px">✅</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">활하중 처짐</div>
+              <div style="font-size:10px;color:var(--g400)">최대 δ = 8.4mm · L = 3,200mm</div>
+              <div class="gauge-bar"><div class="gauge-fill" style="width:54%;background:var(--green)"></div><div class="gauge-limit" style="left:80%"></div></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:16px;font-weight:900;color:var(--green)">L/381</div>
+              <div style="font-size:9px;color:var(--g400)">≥ L/360 OK</div>
+            </div>
+          </div>
+
+          <!-- WARN -->
+          <div class="result-item result-warn">
+            <div style="font-size:14px;margin-top:1px">⚠️</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:#b45309">층간 변위 (3층) — 주의</div>
+              <div style="font-size:10px;color:var(--g400)">최대 Δ = 14.2mm · 지진 하중 조합 · 허용 16.8mm</div>
+              <div class="gauge-bar"><div class="gauge-fill" style="width:77%;background:linear-gradient(90deg,var(--amber),var(--red))"></div><div class="gauge-limit" style="left:80%"></div></div>
+              <div style="font-size:10px;color:#b45309;font-weight:600;margin-top:4px">→ 허용치 1/200 근접 · 기둥 단면 보강 권고</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:16px;font-weight:900;color:var(--amber)">1/211</div>
+              <div style="font-size:9px;color:var(--red);font-weight:600">≥ 1/200 ⚠</div>
+            </div>
+          </div>
+
+          <div class="result-item result-pass">
+            <div style="font-size:14px;margin-top:1px">✅</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">내진 성능 (Cs)</div>
+              <div style="font-size:10px;color:var(--g400)">설계 밑면 전단력 Cs = 0.185W</div>
+              <div class="gauge-bar"><div class="gauge-fill" style="width:38%;background:var(--blue)"></div><div class="gauge-limit" style="left:80%"></div></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:16px;font-weight:900;color:var(--blue)">0.38</div>
+              <div style="font-size:9px;color:var(--g400)">≤ 1.0 OK</div>
+            </div>
+          </div>
+
+          <div class="result-item result-pass">
+            <div style="font-size:14px;margin-top:1px">✅</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">세장비 검토 (기둥)</div>
+              <div style="font-size:10px;color:var(--g400)">유효좌굴길이 KL = 2,800mm</div>
+              <div class="gauge-bar"><div class="gauge-fill" style="width:30%;background:var(--green)"></div><div class="gauge-limit" style="left:80%"></div></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:16px;font-weight:900;color:var(--green)">λ=59</div>
+              <div style="font-size:9px;color:var(--g400)">≤ 200 OK</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 운반 검토 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">🚛 운반 하중 구조 검토</div>
+        <div class="grid-2">
+          <div style="padding:9px;background:var(--g50);border:1px solid var(--g200);border-radius:8px">
+            <div style="font-size:9px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.04em">모듈 자중</div>
+            <div style="font-size:18px;font-weight:900;color:var(--green)">18.4 <span style="font-size:10px">ton</span></div>
+            <div style="font-size:9px;color:var(--g400)">S-18 완성 기준</div>
+          </div>
+          <div style="padding:9px;background:var(--g50);border:1px solid var(--g200);border-radius:8px">
+            <div style="font-size:9px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.04em">크레인 인양</div>
+            <div style="font-size:18px;font-weight:900;color:var(--blue)">22.0 <span style="font-size:10px">ton</span></div>
+            <div style="font-size:9px;color:var(--g400)">동적계수 1.2</div>
+          </div>
+          <div style="padding:9px;background:var(--g50);border:1px solid var(--g200);border-radius:8px">
+            <div style="font-size:9px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.04em">운반 중 처짐</div>
+            <div style="font-size:18px;font-weight:900;color:var(--green)">L/480</div>
+            <div style="font-size:9px;color:var(--g400)">4점 지지</div>
+          </div>
+          <div style="padding:9px;background:var(--g50);border:1px solid var(--g200);border-radius:8px">
+            <div style="font-size:9px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.04em">리프팅 러그</div>
+            <div style="font-size:18px;font-weight:900;color:var(--green)">0.52</div>
+            <div style="font-size:9px;color:var(--g400)">ϕPn=42.3kN ✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: FEM 응력 + 층별 변위 + 결론 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--g100);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">FEM 응력 분포 (von Mises)</span>
+          <div style="display:flex;gap:5px">
+            <span class="chip chip-red">Max: 187 MPa</span>
+            <span class="chip chip-gray">SS275</span>
+          </div>
+        </div>
+        <div class="stress-map">
+          <svg width="100%" height="188" viewBox="0 0 430 188" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ef4444" stop-opacity=".85"/>
+                <stop offset="35%" stop-color="#f59e0b" stop-opacity=".75"/>
+                <stop offset="65%" stop-color="#10b981" stop-opacity=".65"/>
+                <stop offset="100%" stop-color="#3b82f6" stop-opacity=".55"/>
+              </linearGradient>
+              <filter id="gw"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <rect width="430" height="188" fill="#0a1628"/>
+            <!-- Grid -->
+            <pattern id="sg2" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M22 0L0 0 0 22" fill="none" stroke="rgba(59,130,246,.04)" stroke-width=".5"/></pattern>
+            <rect width="430" height="188" fill="url(#sg2)"/>
+            <!-- Floor plates -->
+            <polygon points="70,158 210,112 350,158 210,204" fill="rgba(59,130,246,.1)" stroke="rgba(96,165,250,.18)" stroke-width="1"/>
+            <polygon points="70,108 210,62 350,108 210,154" fill="rgba(16,185,129,.08)" stroke="rgba(52,211,153,.16)" stroke-width="1"/>
+            <polygon points="70,58 210,12 350,58 210,104" fill="rgba(16,185,129,.07)" stroke="rgba(52,211,153,.12)" stroke-width="1"/>
+            <!-- Column left (stress colored) -->
+            <rect x="67" y="8" width="6" height="152" fill="url(#sg)" opacity=".9" filter="url(#gw)"/>
+            <!-- Column center -->
+            <rect x="207" y="-30" width="6" height="152" fill="rgba(16,185,129,.65)"/>
+            <!-- Column right -->
+            <rect x="347" y="8" width="6" height="152" fill="rgba(59,130,246,.45)"/>
+            <!-- Beams 2FL -->
+            <line x1="70" y1="108" x2="210" y2="62" stroke="#10b981" stroke-width="3" opacity=".7"/>
+            <line x1="210" y1="62" x2="350" y2="108" stroke="#10b981" stroke-width="3" opacity=".7"/>
+            <!-- Beams 3FL -->
+            <line x1="70" y1="58" x2="210" y2="12" stroke="#34d399" stroke-width="2.5" opacity=".6"/>
+            <line x1="210" y1="12" x2="350" y2="58" stroke="#34d399" stroke-width="2.5" opacity=".6"/>
+            <!-- Beams 1FL (high stress) -->
+            <line x1="70" y1="158" x2="210" y2="112" stroke="#f59e0b" stroke-width="3.5" opacity=".65"/>
+            <line x1="210" y1="112" x2="350" y2="158" stroke="#f59e0b" stroke-width="3.5" opacity=".65"/>
+            <!-- Max stress indicator -->
+            <circle cx="70" cy="158" r="9" fill="rgba(239,68,68,.2)" stroke="#ef4444" stroke-width="1.5" filter="url(#gw)"/>
+            <line x1="79" y1="158" x2="125" y2="175" stroke="rgba(239,68,68,.5)" stroke-width="1" stroke-dasharray="2,2"/>
+            <rect x="122" y="169" width="92" height="16" rx="4" fill="rgba(239,68,68,.12)" stroke="rgba(239,68,68,.25)" stroke-width="1"/>
+            <text x="168" y="181" fill="#f87171" font-size="9" font-weight="700" text-anchor="middle">Max: 187 MPa ⚠</text>
+            <!-- 3FL warning zone -->
+            <rect x="62" y="5" width="296" height="53" rx="4" fill="rgba(245,158,11,.05)" stroke="rgba(245,158,11,.18)" stroke-width="1" stroke-dasharray="4,3"/>
+            <text x="78" y="19" fill="rgba(245,158,11,.7)" font-size="8" font-weight="600">3FL 주의구간 — 층간변위 1/211</text>
+          </svg>
+          <div class="stress-legend">
+            <div style="font-size:9px;color:rgba(255,255,255,.6);font-weight:700;margin-bottom:4px">응력 [MPa]</div>
+            <div class="leg-row"><div class="leg-swatch" style="background:#ef4444"></div><span class="leg-text">≥187 ⚠</span></div>
+            <div class="leg-row"><div class="leg-swatch" style="background:#f59e0b"></div><span class="leg-text">140</span></div>
+            <div class="leg-row"><div class="leg-swatch" style="background:#10b981"></div><span class="leg-text">90</span></div>
+            <div class="leg-row"><div class="leg-swatch" style="background:#3b82f6"></div><span class="leg-text">≤40</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 층별 수평 변위 -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">층별 수평 변위 (지진 X방향)</span>
+          <span class="chip chip-amber">허용: 16.8mm</span>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:8px;height:72px;padding:0 4px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+            <span style="font-size:11px;font-weight:700;color:var(--green)">3.2</span>
+            <div style="width:100%;height:22px;background:#dcfce7;border:1.5px solid #86efac;border-radius:3px 3px 0 0"></div>
+            <span style="font-size:9px;color:var(--g400)">1FL</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+            <span style="font-size:11px;font-weight:700;color:var(--blue)">8.7</span>
+            <div style="width:100%;height:44px;background:rgba(26,86,219,.07);border:1.5px solid rgba(26,86,219,.22);border-radius:3px 3px 0 0"></div>
+            <span style="font-size:9px;color:var(--g400)">2FL</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+            <span style="font-size:11px;font-weight:800;color:var(--amber)">14.2</span>
+            <div style="width:100%;height:62px;background:#fef9c3;border:2px solid var(--amber);border-radius:3px 3px 0 0"></div>
+            <span style="font-size:9px;color:var(--amber);font-weight:700">3FL ⚠</span>
+          </div>
+          <div style="width:1.5px;background:var(--red);height:72px;position:relative;flex-shrink:0">
+            <div style="position:absolute;top:-12px;left:4px;font-size:8px;color:var(--red);white-space:nowrap;font-weight:700">허용 16.8mm</div>
+          </div>
+          <div style="flex:2;padding-left:8px;display:flex;flex-direction:column;gap:5px">
+            <div style="font-size:10px;color:var(--g400)">단위: mm</div>
+            <div style="display:flex;align-items:center;gap:5px">
+              <div style="width:10px;height:10px;background:#fef9c3;border:1.5px solid var(--amber);border-radius:2px"></div>
+              <span style="font-size:10px;color:var(--amber);font-weight:600">허용한계 근접</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px">
+              <div style="width:10px;height:2px;background:var(--red)"></div>
+              <span style="font-size:10px;color:var(--red)">허용 한계선</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 결론 및 권고사항 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">💡 검토 결론 및 권고사항</div>
+        <div style="background:#fffbeb;border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:10px 13px;margin-bottom:7px">
+          <div style="font-size:12px;font-weight:700;color:#b45309">⚠️ 3층 층간변위 보완 권고</div>
+          <div style="font-size:11px;color:var(--g600);margin-top:3px">현재 1/211로 허용치(1/200) 근접. 기둥 단면 상향(H-250×125) 또는 3층 가새 보강 검토 필요.</div>
+        </div>
+        <div style="background:#f0fdf4;border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:10px 13px;margin-bottom:7px">
+          <div style="font-size:12px;font-weight:700;color:#15803d">✅ 전반적 구조 안전성 확보</div>
+          <div style="font-size:11px;color:var(--g600);margin-top:3px">11개 항목 KBC 2019 기준 통과. 설계 승인 가능 수준.</div>
+        </div>
+        <div style="background:#f0fdf4;border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:10px 13px">
+          <div style="font-size:12px;font-weight:700;color:#15803d">✅ 운반·시공 안전성 적합</div>
+          <div style="font-size:11px;color:var(--g600);margin-top:3px">크레인 인양하중, 운반 중 처짐, 리프팅 러그 전 항목 적합.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: 접합부 상세 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card" style="flex:1;padding:16px">
+        <div class="side-title" style="margin-bottom:12px">🔩 접합부 상세 검토</div>
+
+        <div class="jd-card" style="border-color:rgba(16,185,129,.3);background:#f0fdf4">
+          <div class="jd-head">
+            <span class="jd-title">① 모듈-모듈 적층</span>
+            <span class="chip chip-green" style="font-size:10px">PASS</span>
+          </div>
+          <div class="jd-grid">
+            <div class="jd-cell"><div class="jd-key">전단 응력</div><div class="jd-val" style="color:var(--green)">38.4 kN</div></div>
+            <div class="jd-cell"><div class="jd-key">허용 전단</div><div class="jd-val">82.0 kN</div></div>
+            <div class="jd-cell"><div class="jd-key">인발력</div><div class="jd-val" style="color:var(--green)">12.1 kN</div></div>
+            <div class="jd-cell"><div class="jd-key">안전율</div><div class="jd-val" style="color:var(--green)">2.14</div></div>
+          </div>
+        </div>
+
+        <div class="jd-card" style="border-color:rgba(26,86,219,.25);background:rgba(26,86,219,.025)">
+          <div class="jd-head">
+            <span class="jd-title">② 기둥-보 강접합</span>
+            <span class="chip chip-blue" style="font-size:10px">PASS</span>
+          </div>
+          <div class="jd-grid">
+            <div class="jd-cell"><div class="jd-key">접합 모멘트</div><div class="jd-val" style="color:var(--blue)">18.6 kN·m</div></div>
+            <div class="jd-cell"><div class="jd-key">설계 내력</div><div class="jd-val">32.4 kN·m</div></div>
+            <div class="jd-cell"><div class="jd-key">용접부 응력</div><div class="jd-val" style="color:var(--blue)">187 MPa</div></div>
+            <div class="jd-cell"><div class="jd-key">안전율</div><div class="jd-val" style="color:var(--blue)">1.74</div></div>
+          </div>
+        </div>
+
+        <div class="jd-card" style="border-color:rgba(245,158,11,.3);background:#fffbeb">
+          <div class="jd-head">
+            <span class="jd-title">③ 기초-기둥 앵커</span>
+            <span class="chip chip-amber" style="font-size:10px">PASS</span>
+          </div>
+          <div class="jd-grid">
+            <div class="jd-cell"><div class="jd-key">앵커 인발력</div><div class="jd-val" style="color:var(--amber)">24.6 kN</div></div>
+            <div class="jd-cell"><div class="jd-key">앵커 내력</div><div class="jd-val">56.0 kN</div></div>
+            <div class="jd-cell"><div class="jd-key">전단 검토</div><div class="jd-val" style="color:var(--green)">0.61</div></div>
+            <div class="jd-cell"><div class="jd-key">안전율</div><div class="jd-val" style="color:var(--amber)">2.28</div></div>
+          </div>
+        </div>
+
+        <div class="jd-card" style="border-color:rgba(139,92,246,.25);background:rgba(139,92,246,.03)">
+          <div class="jd-head">
+            <span class="jd-title">④ 내진 가새 접합</span>
+            <span class="chip chip-purple" style="font-size:10px">PASS</span>
+          </div>
+          <div class="jd-grid">
+            <div class="jd-cell"><div class="jd-key">가새 축력</div><div class="jd-val" style="color:var(--purple)">42.3 kN</div></div>
+            <div class="jd-cell"><div class="jd-key">설계 내력</div><div class="jd-val">78.5 kN</div></div>
+            <div class="jd-cell"><div class="jd-key">게이지 응력</div><div class="jd-val" style="color:var(--purple)">156 MPa</div></div>
+            <div class="jd-cell"><div class="jd-key">안전율</div><div class="jd-val" style="color:var(--purple)">1.86</div></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-amber" style="width:100%" onclick="showTab(2)">⚠ 구조 수정 검토 →</button>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div><div class="msg-label">전달 메시지</div><div class="msg-arrow">해석 → 검토 결과</div></div>
+    <div class="msg-text">12개 항목 중 11개 KBC 2019 기준 통과. <strong>3층 층간변위 1/211</strong>이 허용치(1/200)에 근접하여 보완 권고.<br>FEM 응력 분포·접합부 안전율·운반하중 모든 항목 적합 — 단 1개 항목 수정 후 완전 통과 예상.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN #29 — 구조 수정 및 구속조건 재설계
+══════════════════════════════════════════════════════ -->
+<div class="screen">
+
+  <div class="screen-header">
+    <div class="screen-header-left">
+      <div class="screen-num">SCREEN #29 · 그룹 D — 구조 검토</div>
+      <div class="screen-title">구조 수정 및 구속조건 재설계 화면</div>
+      <div class="screen-desc">AI 최적 수정 대안 비교 → 단면 변경 → 구속조건 재설정 → 재해석 준비</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="chip chip-amber">원인: 3층 변위 1/211</span>
+      <span class="chip chip-blue">대안 1 선택 중</span>
+      <span class="chip chip-green">예측: 1/284 통과</span>
+    </div>
+  </div>
+
+  <!-- 문제→대안 흐름 배너 (라이트 테마) -->
+  <div style="background:linear-gradient(135deg,#fffbeb,#fff7ed);border:1.5px solid #fcd34d;border-radius:11px;padding:13px 20px;display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <div style="width:8px;height:8px;background:var(--amber);border-radius:50%"></div>
+      <span style="font-size:11px;color:var(--g400);font-weight:600">문제 감지</span>
+    </div>
+    <span style="color:var(--g400);font-size:14px">›</span>
+    <span style="font-size:12px;font-weight:700;color:#b45309">⚠️ 3층 층간변위 1/211 (허용 1/200 초과)</span>
+    <span style="color:var(--g400);font-size:14px">›</span>
+    <span style="font-size:12px;font-weight:700;color:var(--blue)">🤖 AI 3가지 보강 대안 자동 생성</span>
+    <span style="color:var(--g400);font-size:14px">›</span>
+    <span style="font-size:12px;font-weight:700;color:var(--green)">✅ 대안 1 선택 → 재해석 → 기준 축적</span>
+    <button class="btn-primary" style="margin-left:auto" onclick="showTab(3)">재해석 실행 →</button>
+  </div>
+
+  <!-- 메인 3열 -->
+  <div style="display:grid;grid-template-columns:1.1fr 0.9fr 1fr;gap:16px">
+
+    <!-- LEFT: 수정 대안 3가지 -->
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div class="card" style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">🔧 구조 수정 대안 (AI 자동 생성)</span>
+          <span class="chip chip-blue">비용 최적 추천</span>
+        </div>
+
+        <!-- 대안 1 (선택됨) -->
+        <div class="alt-card selected">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:24px;height:24px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:900">1</div>
+              <span style="font-size:13px;font-weight:800;color:var(--blue)">기둥 단면 상향 ★ 추천</span>
+            </div>
+            <div style="display:flex;gap:5px">
+              <span class="chip chip-green" style="font-size:10px">최소 비용</span>
+              <span class="chip chip-blue" style="font-size:10px">선택됨</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">기둥 단면</span>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:11px;color:var(--g400);text-decoration:line-through">H-200×100×5.5×8</span>
+                <span style="color:var(--g400)">→</span>
+                <span style="font-size:11px;font-weight:700;color:var(--g900)">H-250×125×6×9</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">단면 2차모멘트</span>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:11px;color:var(--g400);text-decoration:line-through">1,840 cm⁴</span>
+                <span style="color:var(--g400)">→</span>
+                <span style="font-size:11px;font-weight:700;color:var(--green)">4,050 cm⁴ (+120%)</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">예상 층간변위</span>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:11px;color:var(--g400);text-decoration:line-through">1/211</span>
+                <span style="color:var(--g400)">→</span>
+                <span style="font-size:11px;font-weight:700;color:var(--green)">1/284 ✓</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">추가 비용</span>
+              <span style="font-size:11px;font-weight:700;color:var(--blue)">약 +180만원 / 세대</span>
+            </div>
+          </div>
+          <div style="margin-top:9px">
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--g400);margin-bottom:3px">
+              <span>수정 후 변위비</span>
+              <span>허용한계: 1/200</span>
+            </div>
+            <div style="height:7px;background:var(--g200);border-radius:4px;position:relative;overflow:visible">
+              <div style="height:100%;width:35%;background:var(--green);border-radius:4px"></div>
+              <div style="position:absolute;top:-3px;left:70%;width:2px;height:13px;background:var(--red);border-radius:1px;opacity:.55"></div>
+              <div style="position:absolute;top:-13px;left:68%;font-size:8px;color:var(--red)">허용</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 대안 2 -->
+        <div class="alt-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:24px;height:24px;background:rgba(139,92,246,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--purple);font-weight:900">2</div>
+              <span style="font-size:13px;font-weight:700;color:var(--g900)">수평 가새 추가</span>
+            </div>
+            <span class="chip chip-purple" style="font-size:10px">강성 +35%</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">3층 X방향 가새</span>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:11px;color:var(--g400);text-decoration:line-through">없음</span>
+                <span style="color:var(--g400)">→</span>
+                <span style="font-size:11px;font-weight:700;color:var(--g900)">X형 □-100×100×4.5</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">수평 강성 증가</span>
+              <span style="font-size:11px;font-weight:700;color:var(--purple)">+35%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">추가 비용</span>
+              <span style="font-size:11px;color:var(--g400)">+240만원 / 세대</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 대안 3 -->
+        <div class="alt-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:24px;height:24px;background:rgba(245,158,11,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--amber);font-weight:900">3</div>
+              <span style="font-size:13px;font-weight:700;color:var(--g900)">전단벽 보강</span>
+            </div>
+            <span class="chip chip-amber" style="font-size:10px">내진 강화</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">보강 위치</span>
+              <span style="font-size:11px;font-weight:700;color:var(--g900)">3층 코어부 t=150mm</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="list-key">추가 비용</span>
+              <span style="font-size:11px;color:var(--g400)">+380만원 / 세대</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 비용 비교 차트 -->
+        <div style="margin-top:4px;padding:12px 14px;background:var(--g50);border:1px solid var(--g200);border-radius:9px">
+          <div class="side-title" style="margin-bottom:8px">비용 비교 (만원) — 낮을수록 유리</div>
+          <div style="display:flex;gap:12px;align-items:flex-end;height:52px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <span style="font-size:10px;font-weight:700;color:var(--blue)">+180</span>
+              <div style="width:100%;height:46px;background:rgba(26,86,219,.12);border:1.5px solid rgba(26,86,219,.35);border-radius:4px 4px 0 0"></div>
+              <span style="font-size:9px;color:var(--blue);font-weight:700">대안1 ★</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <span style="font-size:10px;font-weight:700;color:var(--purple)">+240</span>
+              <div style="width:100%;height:32px;background:rgba(139,92,246,.08);border:1.5px solid rgba(139,92,246,.25);border-radius:4px 4px 0 0"></div>
+              <span style="font-size:9px;color:var(--g400)">대안2</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <span style="font-size:10px;font-weight:700;color:var(--amber)">+380</span>
+              <div style="width:100%;height:20px;background:#fef9c3;border:1.5px solid #fcd34d;border-radius:4px 4px 0 0"></div>
+              <span style="font-size:9px;color:var(--g400)">대안3</span>
+            </div>
+            <div style="flex:2;font-size:10px;color:var(--g400);line-height:1.7;padding-left:8px">
+              ★ 대안1 최적<br>
+              <span style="color:var(--blue);font-weight:700">비용 최소 + 효과 최대</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: 단면 비교 + 구속조건 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 단면 변경 비교 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">📐 단면 변경 비교 (기둥)</div>
+        <div class="section-compare">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <span style="font-size:10px;font-weight:700;color:var(--amber)">수정 전</span>
+            <svg width="76" height="88" viewBox="0 0 76 88" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="4" width="60" height="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+              <rect x="33" y="12" width="10" height="64" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+              <rect x="8" y="76" width="60" height="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+              <text x="38" y="48" text-anchor="middle" fill="#b45309" font-size="8" font-weight="700">200</text>
+            </svg>
+            <span style="font-size:10px;color:var(--g600)">H-200×100</span>
+            <span style="font-size:11px;font-weight:700;color:#b45309">Ix=1,840 cm⁴</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+            <div style="font-size:22px;color:var(--blue)">→</div>
+            <div style="font-size:9px;font-weight:700;color:var(--blue);background:rgba(26,86,219,.07);padding:3px 8px;border-radius:5px">+120% 강성</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <span style="font-size:10px;font-weight:700;color:var(--green)">수정 후</span>
+            <svg width="88" height="88" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="4" width="76" height="9" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+              <rect x="38" y="13" width="12" height="62" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+              <rect x="6" y="75" width="76" height="9" fill="#dcfce7" stroke="#10b981" stroke-width="1.5"/>
+              <text x="44" y="48" text-anchor="middle" fill="#15803d" font-size="8" font-weight="700">250</text>
+            </svg>
+            <span style="font-size:10px;color:var(--g600)">H-250×125</span>
+            <span style="font-size:11px;font-weight:700;color:var(--green)">Ix=4,050 cm⁴</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;padding:8px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;text-align:center">
+          <span style="font-size:12px;font-weight:700;color:#15803d">강성 +120% · 중량 +22% · 변위 1/211→1/284</span>
+        </div>
+      </div>
+
+      <!-- 구속 조건 재설정 -->
+      <div class="card" style="flex:1">
+        <div class="side-title" style="margin-bottom:10px">🔒 구속 조건 재설정</div>
+        <div class="cn-row">
+          <div class="cn-icon" style="background:rgba(26,86,219,.08)">📍</div>
+          <div class="cn-body">
+            <div class="cn-name">기초 고정 경계</div>
+            <div class="cn-desc">Ux=Uy=Uz=Rx=Ry=Rz=0</div>
+          </div>
+          <div class="cn-status">
+            <div style="font-size:12px;font-weight:700;color:var(--blue)">Fixed</div>
+            <div style="font-size:9px;color:var(--g400)">변경 없음</div>
+          </div>
+        </div>
+        <div class="cn-row" style="border-color:rgba(16,185,129,.3);background:#f0fdf4">
+          <div class="cn-icon" style="background:rgba(16,185,129,.1)">🔄</div>
+          <div class="cn-body">
+            <div class="cn-name">모듈-모듈 접합 (수직)</div>
+            <div class="cn-desc">강접 → 반강접 · 회전 자유도 확보</div>
+          </div>
+          <div class="cn-status">
+            <div style="font-size:12px;font-weight:700;color:var(--green)">Semi-Rigid</div>
+            <div style="font-size:9px;color:#15803d">⬅ 수정</div>
+          </div>
+        </div>
+        <div class="cn-row" style="border-color:rgba(245,158,11,.3);background:#fffbeb">
+          <div class="cn-icon" style="background:rgba(245,158,11,.1)">🔗</div>
+          <div class="cn-body">
+            <div class="cn-name">3층 기둥-보 강접 유지</div>
+            <div class="cn-desc">내진 가새로 수평 보강 보완</div>
+          </div>
+          <div class="cn-status">
+            <div style="font-size:12px;font-weight:700;color:var(--amber)">Moment</div>
+            <div style="font-size:9px;color:#b45309">유지+보강</div>
+          </div>
+        </div>
+        <div class="cn-row">
+          <div class="cn-icon" style="background:rgba(139,92,246,.08)">🌐</div>
+          <div class="cn-body">
+            <div class="cn-name">바닥판 다이어프램</div>
+            <div class="cn-desc">강체 · 동일층 수평변위 통일</div>
+          </div>
+          <div class="cn-status">
+            <div style="font-size:12px;font-weight:700;color:var(--purple)">Rigid</div>
+            <div style="font-size:9px;color:var(--g400)">변경 없음</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: 재해석 예측 + 비용 + 흐름 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 재해석 예측 결과 -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">🔮 재해석 예측 결과</span>
+          <span class="chip chip-blue">AI 예측</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:#f0fdf4;border:1px solid #86efac;border-radius:9px">
+            <div>
+              <div style="font-size:12px;font-weight:700">3층 층간변위</div>
+              <div style="font-size:10px;color:var(--g400)">지진 하중 조합</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:20px;font-weight:900;color:var(--green)">1/284</div>
+              <div style="font-size:9px;color:#15803d">≥ 1/200 ✓</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:#f0fdf4;border:1px solid #86efac;border-radius:9px">
+            <div>
+              <div style="font-size:12px;font-weight:700">기둥 강도비</div>
+              <div style="font-size:10px;color:var(--g400)">단면 변경 후</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:20px;font-weight:900;color:var(--green)">0.31</div>
+              <div style="font-size:9px;color:#15803d">≤ 1.0 ✓ (−35%)</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:rgba(26,86,219,.04);border:1px solid rgba(26,86,219,.18);border-radius:9px">
+            <div>
+              <div style="font-size:12px;font-weight:700">총 구조 중량</div>
+              <div style="font-size:10px;color:var(--g400)">단면 증가 반영</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:20px;font-weight:900;color:var(--blue)">+2.2%</div>
+              <div style="font-size:9px;color:var(--blue)">허용 범위</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:#f0fdf4;border:1px solid #86efac;border-radius:9px">
+            <div>
+              <div style="font-size:12px;font-weight:700">전 검토 항목</div>
+              <div style="font-size:10px;color:var(--g400)">대안1 적용 후</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:20px;font-weight:900;color:var(--green)">12/12</div>
+              <div style="font-size:9px;color:#15803d">전 항목 PASS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 비용 영향 분석 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">💰 비용 영향 분석</div>
+        <div class="list-row">
+          <span class="list-key">원 구조 비용</span>
+          <span class="list-val">4,820 만원</span>
+        </div>
+        <div class="list-row">
+          <span class="list-key" style="color:var(--blue);font-weight:600">단면 보강 (대안1)</span>
+          <span class="list-val" style="color:var(--blue)">+ 180 만원</span>
+        </div>
+        <div class="list-row">
+          <span class="list-key">기타 비용 절감</span>
+          <span class="list-val" style="color:var(--green)">− 45 만원</span>
+        </div>
+        <div style="margin-top:8px;padding:10px 12px;background:rgba(26,86,219,.04);border:1px solid rgba(26,86,219,.18);border-radius:9px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">최종 구조 비용</span>
+          <span style="font-size:20px;font-weight:900;color:var(--blue)">4,955 만원</span>
+        </div>
+        <div style="font-size:10px;color:var(--g400);text-align:right;margin-top:5px">증가율 +2.8% · 구조 안전성 확보</div>
+      </div>
+
+      <!-- 재설계 진행 흐름 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">⚡ 재설계 진행 흐름</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 11px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px">
+            <div style="width:20px;height:20px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;flex-shrink:0">✓</div>
+            <span style="font-size:11px;font-weight:600;color:#15803d">수정 대안 선택 완료 (대안1)</span>
+          </div>
+          <div style="text-align:center;color:var(--g400);font-size:13px">↓</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 11px;background:rgba(26,86,219,.04);border:1.5px solid rgba(26,86,219,.25);border-radius:8px">
+            <div style="width:20px;height:20px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;flex-shrink:0">●</div>
+            <span style="font-size:11px;font-weight:600;color:var(--blue)">구속조건 재설정 진행 중</span>
+          </div>
+          <div style="text-align:center;color:var(--g400);font-size:13px">↓</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--g50);border:1px solid var(--g200);border-radius:8px;opacity:.6">
+            <div style="width:20px;height:20px;background:var(--g200);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--g400);flex-shrink:0">3</div>
+            <span style="font-size:11px;color:var(--g400)">FEM 재해석 실행 대기</span>
+          </div>
+          <div style="text-align:center;color:var(--g400);font-size:13px">↓</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--g50);border:1px solid var(--g200);border-radius:8px;opacity:.6">
+            <div style="width:20px;height:20px;background:var(--g200);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--g400);flex-shrink:0">4</div>
+            <span style="font-size:11px;color:var(--g400)">결과 검증 → 기준 축적</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div><div class="msg-label">전달 메시지</div><div class="msg-arrow">문제 감지 → 자동 수정</div></div>
+    <div class="msg-text">층간변위 초과 문제 감지 시 <strong>AI가 비용·효과 기준 3가지 대안을 자동 생성</strong>하여 엔지니어가 선택·확인만 하면 된다.<br>대안1(기둥 단면 H-250×125) 적용 → 변위 1/284로 개선, 추가 비용 +180만원(+2.8%), 12/12 전 항목 통과 예상.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN #30 — 구조 검토 기준 축적 및 판단체계
+══════════════════════════════════════════════════════ -->
+<div class="screen">
+
+  <div class="screen-header">
+    <div class="screen-header-left">
+      <div class="screen-num">SCREEN #30 · 그룹 D — 구조 검토</div>
+      <div class="screen-title">구조 검토 기준 축적 및 판단체계 화면</div>
+      <div class="screen-desc">#27→#28→#29→#30 파이프라인 완성 · 기준 DB 47건 자동 축적 · AI 구조 판단 학습</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="chip chip-blue">6종 모듈</span>
+      <span class="chip chip-teal">47건 축적</span>
+      <span class="chip chip-green">AI 94%</span>
+    </div>
+  </div>
+
+  <!-- 상단 KPI -->
+  <div class="grid-4" style="margin-bottom:16px">
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div style="font-size:10px;color:var(--g400);margin-bottom:4px">모듈 유형</div>
+      <div style="font-size:28px;font-weight:900;color:var(--blue)">6종</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:2px">U/T/S/H-haus</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div style="font-size:10px;color:var(--g400);margin-bottom:4px">기준 항목</div>
+      <div style="font-size:28px;font-weight:900;color:var(--g900)">28</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:2px">누적 기준</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);padding:16px;text-align:center">
+      <div style="font-size:10px;color:var(--g400);margin-bottom:4px">누적 레코드</div>
+      <div style="font-size:28px;font-weight:900;color:var(--teal)">47</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:2px">건 축적</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--r);border:2px solid var(--green);box-shadow:0 4px 16px rgba(16,185,129,.1);padding:16px;text-align:center">
+      <div style="font-size:10px;color:#047857;margin-bottom:4px">AI 판단 정확도</div>
+      <div style="font-size:28px;font-weight:900;color:var(--green)">94%</div>
+      <div style="font-size:11px;color:#047857;margin-top:2px">자동 추천 체계</div>
+    </div>
+  </div>
+
+  <!-- 메인 3열 -->
+  <div style="display:grid;grid-template-columns:1fr 1.05fr 0.95fr;gap:16px">
+
+    <!-- LEFT: 기준 누적 추이 + DB 목록 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 누적 추이 차트 -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">📈 기준 누적 추이</span>
+          <span class="chip chip-teal">+47건 총계</span>
+        </div>
+        <div class="trend-chart">
+          <div class="trend-col">
+            <span class="trend-val" style="color:var(--g400)">14</span>
+            <div class="trend-bar-fill" style="height:24px;background:rgba(26,86,219,.18);border:1.5px solid rgba(26,86,219,.32);border-radius:3px 3px 0 0"></div>
+            <span class="trend-lbl">7월</span>
+          </div>
+          <div class="trend-col">
+            <span class="trend-val" style="color:var(--g400)">18</span>
+            <div class="trend-bar-fill" style="height:30px;background:rgba(26,86,219,.22);border:1.5px solid rgba(26,86,219,.36);border-radius:3px 3px 0 0"></div>
+            <span class="trend-lbl">8월</span>
+          </div>
+          <div class="trend-col">
+            <span class="trend-val" style="color:var(--g400)">25</span>
+            <div class="trend-bar-fill" style="height:39px;background:rgba(26,86,219,.28);border:1.5px solid rgba(26,86,219,.42);border-radius:3px 3px 0 0"></div>
+            <span class="trend-lbl">9월</span>
+          </div>
+          <div class="trend-col">
+            <span class="trend-val" style="color:var(--g400)">34</span>
+            <div class="trend-bar-fill" style="height:48px;background:rgba(26,86,219,.34);border:1.5px solid rgba(26,86,219,.48);border-radius:3px 3px 0 0"></div>
+            <span class="trend-lbl">10월</span>
+          </div>
+          <div class="trend-col">
+            <span class="trend-val" style="color:var(--blue);font-weight:800">47</span>
+            <div class="trend-bar-fill" style="height:61px;background:var(--blue);border:1.5px solid var(--blue);border-radius:3px 3px 0 0"></div>
+            <span class="trend-lbl" style="color:var(--blue);font-weight:700">11월</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 기준 DB 목록 -->
+      <div class="card" style="padding:0;overflow:hidden;flex:1">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--g100);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">📚 구조 기준 축적 현황</span>
+          <span class="chip chip-purple">28항목</span>
+        </div>
+        <!-- 필터 탭 -->
+        <div style="padding:8px 12px;border-bottom:1px solid var(--g100);display:flex;gap:5px;flex-wrap:wrap">
+          <button class="filter-tab active" onclick="filterDB('all',this)">전체</button>
+          <button class="filter-tab" onclick="filterDB('section',this)">단면</button>
+          <button class="filter-tab" onclick="filterDB('joint',this)">접합부</button>
+          <button class="filter-tab" onclick="filterDB('seismic',this)">내진</button>
+          <button class="filter-tab" onclick="filterDB('trans',this)">운반</button>
+        </div>
+        <div>
+          <div class="cr-row" data-cat="section">
+            <div class="cr-num" style="background:#dcfce7;color:#15803d">1</div>
+            <div class="cr-body">
+              <div class="cr-name">S-18 기둥 최소 단면</div>
+              <div class="cr-meta">3층 이상 → H-250×125 이상 · 47건 누적</div>
+            </div>
+            <div class="cr-val" style="color:var(--green)">H-250</div>
+            <span class="chip chip-green" style="font-size:9px;flex-shrink:0">확정</span>
+          </div>
+          <div class="cr-row" data-cat="seismic">
+            <div class="cr-num" style="background:rgba(26,86,219,.1);color:var(--blue)">2</div>
+            <div class="cr-body">
+              <div class="cr-name">층간변위 허용치</div>
+              <div class="cr-meta">내진 특등급 · 지진 조합 하중 기준</div>
+            </div>
+            <div class="cr-val" style="color:var(--blue)">1/200</div>
+            <span class="chip chip-teal" style="font-size:9px;flex-shrink:0">KBC</span>
+          </div>
+          <div class="cr-row" data-cat="joint">
+            <div class="cr-num" style="background:#dcfce7;color:#15803d">3</div>
+            <div class="cr-body">
+              <div class="cr-name">모듈 적층 접합 볼트 최소</div>
+              <div class="cr-meta">수직 하중+인발력 동시 검토 필수</div>
+            </div>
+            <div class="cr-val" style="color:var(--green)">M20×8</div>
+            <span class="chip chip-green" style="font-size:9px;flex-shrink:0">검증됨</span>
+          </div>
+          <div class="cr-row" data-cat="trans">
+            <div class="cr-num" style="background:#fef9c3;color:#b45309">4</div>
+            <div class="cr-body">
+              <div class="cr-name">운반 하중 안전율</div>
+              <div class="cr-meta">크레인 동적계수 1.2 · 리프팅 러그 필수</div>
+            </div>
+            <div class="cr-val" style="color:var(--amber)">≥1.75</div>
+            <span class="chip chip-amber" style="font-size:9px;flex-shrink:0">권고</span>
+          </div>
+          <div class="cr-row" data-cat="joint">
+            <div class="cr-num" style="background:#dcfce7;color:#15803d">5</div>
+            <div class="cr-body">
+              <div class="cr-name">기초-기둥 앵커 에폭시</div>
+              <div class="cr-meta">지진 Zone I · 케미컬 앵커 D25 이상</div>
+            </div>
+            <div class="cr-val" style="color:var(--green)">필수</div>
+            <span class="chip chip-green" style="font-size:9px;flex-shrink:0">확정</span>
+          </div>
+          <div class="cr-row" data-cat="section">
+            <div class="cr-num" style="background:rgba(26,86,219,.1);color:var(--blue)">6</div>
+            <div class="cr-body">
+              <div class="cr-name">강재 항복강도 최소</div>
+              <div class="cr-meta">모든 주요 부재 · KS D 3503</div>
+            </div>
+            <div class="cr-val" style="color:var(--blue)">SS275</div>
+            <span class="chip chip-teal" style="font-size:9px;flex-shrink:0">KBC</span>
+          </div>
+          <div class="cr-row" data-cat="seismic">
+            <div class="cr-num" style="background:rgba(139,92,246,.1);color:var(--purple)">7</div>
+            <div class="cr-body">
+              <div class="cr-name">다이어프램 강체 가정</div>
+              <div class="cr-meta">합성 데크 150mm 이상 → 자동 적용</div>
+            </div>
+            <div class="cr-val" style="color:var(--purple)">자동</div>
+            <span class="chip chip-purple" style="font-size:9px;flex-shrink:0">학습</span>
+          </div>
+          <div class="cr-row" data-cat="seismic">
+            <div class="cr-num" style="background:#fef9c3;color:#b45309">8</div>
+            <div class="cr-body">
+              <div class="cr-name">3층 이상 가새 보강</div>
+              <div class="cr-meta">풍하중 35m/s 초과 지역 · 의무 적용</div>
+            </div>
+            <div class="cr-val" style="color:var(--amber)">권고</div>
+            <span class="chip chip-amber" style="font-size:9px;flex-shrink:0">조건부</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: 매트릭스 + AI 학습 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 모듈 유형별 구조 기준 매트릭스 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:12px">📊 모듈 유형별 구조 기준 매트릭스</div>
+        <table style="width:100%;border-collapse:separate;border-spacing:3px;font-size:10px">
+          <thead>
+            <tr>
+              <th style="background:var(--g50);padding:7px 8px;border-radius:5px;color:var(--g600);font-weight:700;text-align:left;border:1px solid var(--g200)">기준 항목</th>
+              <th style="background:var(--g50);padding:7px;border-radius:5px;color:var(--g600);text-align:center;border:1px solid var(--g200)">U-9<br><span style="font-weight:400;opacity:.8">29.7m²</span></th>
+              <th style="background:var(--g50);padding:7px;border-radius:5px;color:var(--g600);text-align:center;border:1px solid var(--g200)">T-15<br><span style="font-weight:400;opacity:.8">49.5m²</span></th>
+              <th style="background:rgba(26,86,219,.05);padding:7px;border-radius:5px;color:var(--blue);font-weight:800;text-align:center;border:1.5px solid rgba(26,86,219,.25)">S-18 ★<br><span style="font-weight:500">59.5m²</span></th>
+              <th style="background:var(--g50);padding:7px;border-radius:5px;color:var(--g600);text-align:center;border:1px solid var(--g200)">H-24<br><span style="font-weight:400;opacity:.8">79.2m²</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:6px 8px;color:var(--g600);font-size:11px">기둥 최소단면</td><td><div class="mx-cell mx-green">H-150</div></td><td><div class="mx-cell mx-green">H-200</div></td><td><div class="mx-cell mx-blue">H-250 ★</div></td><td><div class="mx-cell mx-amber">H-300</div></td></tr>
+            <tr><td style="padding:6px 8px;color:var(--g600);font-size:11px">층간변위 허용</td><td><div class="mx-cell mx-green">1/200</div></td><td><div class="mx-cell mx-green">1/200</div></td><td><div class="mx-cell mx-blue">1/200 ★</div></td><td><div class="mx-cell mx-green">1/200</div></td></tr>
+            <tr><td style="padding:6px 8px;color:var(--g600);font-size:11px">접합볼트</td><td><div class="mx-cell mx-green">M16×4</div></td><td><div class="mx-cell mx-green">M20×6</div></td><td><div class="mx-cell mx-blue">M20×8 ★</div></td><td><div class="mx-cell mx-amber">M22×8</div></td></tr>
+            <tr><td style="padding:6px 8px;color:var(--g600);font-size:11px">내진 등급</td><td><div class="mx-cell mx-gray">일반</div></td><td><div class="mx-cell mx-green">특등급</div></td><td><div class="mx-cell mx-blue">특등급 ★</div></td><td><div class="mx-cell mx-blue">특등급</div></td></tr>
+            <tr><td style="padding:6px 8px;color:var(--g600);font-size:11px">가새 보강</td><td><div class="mx-cell mx-gray">선택</div></td><td><div class="mx-cell mx-amber">권고</div></td><td><div class="mx-cell mx-blue">3층↑필수 ★</div></td><td><div class="mx-cell mx-amber">필수</div></td></tr>
+            <tr><td style="padding:6px 8px;color:var(--g600);font-size:11px">운반 안전율</td><td><div class="mx-cell mx-green">≥1.5</div></td><td><div class="mx-cell mx-green">≥1.75</div></td><td><div class="mx-cell mx-blue">≥1.75 ★</div></td><td><div class="mx-cell mx-amber">≥2.0</div></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:6px;font-size:9px;color:var(--g400);text-align:right">★ 현재 검토 사업지 S-18 기준 적용</div>
+      </div>
+
+      <!-- AI 기준 학습 현황 -->
+      <div class="card" style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:700;color:var(--g900)">🧠 AI 기준 학습 현황</span>
+          <span class="chip chip-blue">자동 업데이트</span>
+        </div>
+        <div class="learn-row">
+          <div class="learn-icon">🏗️</div>
+          <div class="learn-body">
+            <div class="learn-title">S-18 구조 패턴 학습</div>
+            <div class="learn-sub">47건 누적 → 단면-층수-변위 관계</div>
+          </div>
+          <div class="learn-val">98%</div>
+        </div>
+        <div class="learn-row">
+          <div class="learn-icon">🔩</div>
+          <div class="learn-body">
+            <div class="learn-title">접합부 취약 패턴 인식</div>
+            <div class="learn-sub">적층 조건별 볼트 규격 최적화</div>
+          </div>
+          <div class="learn-val" style="color:var(--purple)">87%</div>
+        </div>
+        <div class="learn-row">
+          <div class="learn-icon">🌏</div>
+          <div class="learn-body">
+            <div class="learn-title">지역별 지진/풍하중 기준</div>
+            <div class="learn-sub">서울·수도권 KBC 지역계수 자동 적용</div>
+          </div>
+          <div class="learn-val" style="color:var(--green)">100%</div>
+        </div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px">
+          <div class="prog-wrap">
+            <div class="prog-top">
+              <span style="font-weight:500;color:var(--g600)">단면 최적화 추천 정확도</span>
+              <span style="font-weight:700;color:var(--green)">94%</span>
+            </div>
+            <div class="prog-track"><div class="prog-fill" style="width:94%;background:var(--green)"></div></div>
+          </div>
+          <div class="prog-wrap">
+            <div class="prog-top">
+              <span style="font-weight:500;color:var(--g600)">접합부 규격 자동 추천</span>
+              <span style="font-weight:700;color:var(--blue)">89%</span>
+            </div>
+            <div class="prog-track"><div class="prog-fill" style="width:89%;background:var(--blue)"></div></div>
+          </div>
+          <div class="prog-wrap">
+            <div class="prog-top">
+              <span style="font-weight:500;color:var(--g600)">문제 사전 예측 (Pre-check)</span>
+              <span style="font-weight:700;color:var(--purple)">76%</span>
+            </div>
+            <div class="prog-track"><div class="prog-fill" style="width:76%;background:var(--purple)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: 이력 + 재사용 + 완료 CTA -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 구조 검토 이력 -->
+      <div class="card" style="flex:1">
+        <div class="side-title" style="margin-bottom:12px">🕐 구조 검토 이력 (최근 5건)</div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:#dcfce7;color:#15803d">✅</div>
+          <div class="tl-body">
+            <div class="tl-date">2025-11-08 (현재)</div>
+            <div class="tl-title">강남구 역삼동 S-18 3층</div>
+            <div class="tl-chips">
+              <span class="chip chip-green" style="font-size:9px;padding:2px 7px">H-250 보강</span>
+              <span class="chip chip-blue" style="font-size:9px;padding:2px 7px">변위 1/284</span>
+              <span class="chip chip-green" style="font-size:9px;padding:2px 7px">전항목 PASS</span>
+            </div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:rgba(26,86,219,.1);color:var(--blue)">📋</div>
+          <div class="tl-body">
+            <div class="tl-date">2025-10-22</div>
+            <div class="tl-title">마포구 공덕동 S-18 4층</div>
+            <div class="tl-chips">
+              <span class="chip chip-blue" style="font-size:9px;padding:2px 7px">H-250 적용</span>
+              <span class="chip chip-purple" style="font-size:9px;padding:2px 7px">X가새 추가</span>
+              <span class="chip chip-green" style="font-size:9px;padding:2px 7px">PASS</span>
+            </div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:#fef9c3;color:#b45309">⚠️</div>
+          <div class="tl-body">
+            <div class="tl-date">2025-10-05</div>
+            <div class="tl-title">성동구 성수동 T-15 2층</div>
+            <div class="tl-chips">
+              <span class="chip chip-amber" style="font-size:9px;padding:2px 7px">접합부 수정</span>
+              <span class="chip chip-blue" style="font-size:9px;padding:2px 7px">M20→M22</span>
+              <span class="chip chip-green" style="font-size:9px;padding:2px 7px">PASS</span>
+            </div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:#dcfce7;color:#15803d">✅</div>
+          <div class="tl-body">
+            <div class="tl-date">2025-09-18</div>
+            <div class="tl-title">용산구 한남동 S-18 3층</div>
+            <div class="tl-chips">
+              <span class="chip chip-green" style="font-size:9px;padding:2px 7px">1차 통과</span>
+              <span class="chip chip-gray" style="font-size:9px;padding:2px 7px">변위 1/246</span>
+            </div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot" style="background:#dcfce7;color:#15803d">✅</div>
+          <div class="tl-body">
+            <div class="tl-date">2025-09-02</div>
+            <div class="tl-title">영등포구 당산동 H-24 3층</div>
+            <div class="tl-chips">
+              <span class="chip chip-blue" style="font-size:9px;padding:2px 7px">H-300 기준</span>
+              <span class="chip chip-green" style="font-size:9px;padding:2px 7px">PASS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 재사용 현황 -->
+      <div class="card">
+        <div class="side-title" style="margin-bottom:10px">♻️ 기준 패키지 재사용 현황</div>
+        <div class="reuse-row">
+          <div class="reuse-label">S-18 3층 표준</div>
+          <div class="reuse-track"><div class="reuse-fill" style="width:85%;background:var(--green)"></div></div>
+          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+            <span style="font-size:14px;font-weight:900;color:var(--green)">23회</span>
+            <span class="chip chip-green" style="font-size:9px">최다</span>
+          </div>
+        </div>
+        <div class="reuse-row">
+          <div class="reuse-label">T-15 2층 표준</div>
+          <div class="reuse-track"><div class="reuse-fill" style="width:52%;background:var(--blue)"></div></div>
+          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+            <span style="font-size:14px;font-weight:900;color:var(--blue)">14회</span>
+            <span class="chip chip-blue" style="font-size:9px">2위</span>
+          </div>
+        </div>
+        <div class="reuse-row">
+          <div class="reuse-label">H-24 3층 내진</div>
+          <div class="reuse-track"><div class="reuse-fill" style="width:37%;background:var(--purple)"></div></div>
+          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+            <span style="font-size:14px;font-weight:900;color:var(--purple)">10회</span>
+            <span class="chip chip-purple" style="font-size:9px">3위</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 완료 CTA -->
+      <div style="background:linear-gradient(135deg,var(--blue) 0%,#1e40af 100%);border-radius:var(--r);padding:18px 20px;color:#fff">
+        <div style="font-size:13px;font-weight:900;margin-bottom:5px">🚀 Group D 구조검토 완료</div>
+        <div style="font-size:11px;opacity:.8;margin-bottom:14px;line-height:1.6">
+          #27→#28→#29→#30 4단계 자동 구조검토 파이프라인 완성.<br>
+          기준 DB 47건 축적 · AI 정확도 94%
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div style="text-align:center;padding:8px;background:rgba(255,255,255,.12);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">📊 전체 보고서</div>
+          <div style="text-align:center;padding:8px;background:rgba(255,255,255,.2);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🔄 신규 사업지</div>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,.15);padding-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div style="font-size:10px;opacity:.7">📦 총 축적 기준</div>
+          <div style="font-size:10px;font-weight:700;text-align:right">47건 / 28항목</div>
+          <div style="font-size:10px;opacity:.7">🎯 AI 정확도</div>
+          <div style="font-size:10px;font-weight:700;text-align:right">94% · 자동 추천</div>
+          <div style="font-size:10px;opacity:.7">♻️ S-18 패키지</div>
+          <div style="font-size:10px;font-weight:700;text-align:right">23회 재사용</div>
+          <div style="font-size:10px;opacity:.7">🏗️ 커버 모듈</div>
+          <div style="font-size:10px;font-weight:700;text-align:right">6종 (U/T/S/H)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-banner">
+    <div><div class="msg-label">전달 메시지</div><div class="msg-arrow">검토 → 기준 축적</div></div>
+    <div class="msg-text">매 프로젝트의 구조검토 결과가 <strong>자동으로 DB에 축적</strong>되어 다음 사업지에서 AI 판단의 근거로 재사용된다.<br>47건 누적·28개 기준·AI 정확도 94% — 반복 사업지 검토 시간을 대폭 단축하는 경험 기반 자동화 체계.</div>
+  </div>
+</div>
+
+</body>
+</html>

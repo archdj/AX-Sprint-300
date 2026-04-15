@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1280" />
+<title>UnitBuild — 플랫폼 고도화 로드맵</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+/* ── 디자인 토큰 ─────────────────────────────── */
+:root {
+  --navy:   #0a1628;
+  --blue:   #1a56db;
+  --blue2:  #3b82f6;
+  --teal:   #0ea5e9;
+  --green:  #10b981;
+  --orange: #f97316;
+  --purple: #8b5cf6;
+  --pink:   #ec4899;
+  --amber:  #f59e0b;
+  --red:    #ef4444;
+  --g50:    #f8fafc;
+  --g100:   #f1f5f9;
+  --g200:   #e2e8f0;
+  --g400:   #94a3b8;
+  --g600:   #475569;
+  --g900:   #0f172a;
+  --r:      14px;
+  --sh:     0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+  --shh:    0 8px 30px rgba(26,86,219,.12);
+}
+*{ box-sizing:border-box; margin:0; padding:0 }
+body {
+  font-family: 'Pretendard','Noto Sans KR','Apple SD Gothic Neo',system-ui,sans-serif;
+  background: var(--g50);
+  color: var(--g900);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ── 상단 헤더 바 ──────────────────────────── */
+.topbar {
+  background: var(--navy);
+  height: 58px;
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--blue);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900; color: #fff;
+  letter-spacing: -1px;
+}
+.logo-text { font-size: 15px; font-weight: 900; color: #fff; }
+.logo-sub  { font-size: 11px; color: rgba(255,255,255,.4); margin-left: 4px; }
+.topbar-badge {
+  margin-left: auto;
+  padding: 4px 14px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7);
+  letter-spacing: .06em;
+}
+
+/* ── 페이지 래퍼 ──────────────────────────── */
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 40px 60px;
+}
+
+/* ── 히어로 섹션 ──────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, var(--navy) 0%, #0d2045 60%, #112255 100%);
+  border-radius: 20px;
+  padding: 48px 52px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(26,86,219,.18) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: 30%;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(14,165,233,.1) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px;
+  background: rgba(26,86,219,.25);
+  border: 1px solid rgba(26,86,219,.4);
+  border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  color: #93c5fd;
+  letter-spacing: .08em;
+  margin-bottom: 20px;
+}
+.hero-eyebrow span { width: 6px; height: 6px; background: #60a5fa; border-radius: 50%; display: inline-block; }
+.hero-title {
+  font-size: 36px; font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 14px;
+  position: relative; z-index: 1;
+}
+.hero-title em { color: #60a5fa; font-style: normal; }
+.hero-desc {
+  font-size: 15px; color: rgba(255,255,255,.6);
+  line-height: 1.75;
+  max-width: 620px;
+  position: relative; z-index: 1;
+  margin-bottom: 32px;
+}
+.hero-kpi-row {
+  display: flex;
+  gap: 20px;
+  position: relative; z-index: 1;
+}
+.hero-kpi {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  padding: 16px 22px;
+  min-width: 140px;
+}
+.hero-kpi-val { font-size: 26px; font-weight: 900; color: #fff; line-height: 1; }
+.hero-kpi-val.blue  { color: #60a5fa; }
+.hero-kpi-val.green { color: #34d399; }
+.hero-kpi-val.amber { color: #fbbf24; }
+.hero-kpi-label { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 5px; }
+
+/* ── 섹션 타이틀 ──────────────────────────── */
+.section-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 18px;
+}
+.section-head-line {
+  width: 4px; height: 22px;
+  border-radius: 2px;
+}
+.section-head-title {
+  font-size: 18px; font-weight: 900; color: var(--g900);
+}
+.section-head-sub {
+  font-size: 12px; color: var(--g400); margin-left: 4px;
+}
+
+/* ── 카드 기본 ──────────────────────────── */
+.card {
+  background: #fff;
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  border: 1px solid var(--g200);
+  padding: 22px;
+}
+
+/* ── 우선순위 섹션 ──────────────────────────── */
+.priority-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.priority-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--sh);
+  border: 1.5px solid var(--g200);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s, box-shadow .15s;
+}
+.priority-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shh);
+}
+.priority-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-radius: 16px 16px 0 0;
+}
+.priority-card.p1::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+.priority-card.p2::before { background: linear-gradient(90deg, #f59e0b, #10b981); }
+.priority-card.p3::before { background: linear-gradient(90deg, #8b5cf6, #1a56db); }
+
+.priority-num {
+  font-size: 11px; font-weight: 900;
+  letter-spacing: .1em;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.priority-num .badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 800;
+}
+.badge-red    { background: #fef2f2; color: #dc2626; }
+.badge-amber  { background: #fffbeb; color: #d97706; }
+.badge-purple { background: #f5f3ff; color: #7c3aed; }
+.badge-blue   { background: rgba(26,86,219,.08); color: var(--blue); }
+.badge-green  { background: #f0fdf4; color: #059669; }
+.badge-teal   { background: #f0f9ff; color: #0369a1; }
+.badge-gray   { background: var(--g100); color: var(--g600); }
+
+.priority-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+.icon-red    { background: #fef2f2; }
+.icon-amber  { background: #fffbeb; }
+.icon-purple { background: #f5f3ff; }
+
+.priority-title {
+  font-size: 16px; font-weight: 900; color: var(--g900);
+  margin-bottom: 6px; line-height: 1.3;
+}
+.priority-desc {
+  font-size: 12px; color: var(--g600); line-height: 1.7;
+  margin-bottom: 16px;
+}
+.priority-items {
+  display: flex; flex-direction: column; gap: 7px;
+}
+.priority-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; color: var(--g600); line-height: 1.5;
+}
+.priority-item::before {
+  content: '›';
+  font-weight: 900; flex-shrink: 0; margin-top: 1px;
+}
+.p1 .priority-item::before { color: #ef4444; }
+.p2 .priority-item::before { color: #f59e0b; }
+.p3 .priority-item::before { color: #8b5cf6; }
+
+.priority-footer {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--g100);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.priority-timeline {
+  font-size: 10px; color: var(--g400); font-weight: 600;
+}
+.priority-timeline strong { color: var(--g900); }
+
+/* ── 로직 보정 섹션 ──────────────────────────── */
+.logic-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.logic-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: var(--sh);
+  border: 1px solid var(--g200);
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s;
+}
+.logic-card:hover { transform: translateY(-2px); }
+.logic-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+}
+.lc-판단::after   { background: var(--blue); }
+.lc-설계::after   { background: var(--teal); }
+.lc-bim::after    { background: var(--green); }
+.lc-구조::after   { background: var(--orange); }
+.lc-제조::after   { background: var(--purple); }
+
+.logic-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 12px;
+}
+.logic-title {
+  font-size: 13px; font-weight: 900; color: var(--g900);
+  margin-bottom: 4px;
+}
+.logic-sub {
+  font-size: 10px; color: var(--g400); margin-bottom: 12px;
+  line-height: 1.5;
+}
+.logic-items {
+  display: flex; flex-direction: column; gap: 5px;
+}
+.logic-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--g600);
+}
+.logic-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+}
+.logic-progress {
+  margin-top: 14px;
+}
+.logic-progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--g400); margin-bottom: 5px;
+}
+.progress-bar {
+  height: 5px; background: var(--g100); border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 3px;
+  transition: width .6s ease;
+}
+
+/* ── 패키지 성능 섹션 ──────────────────────────── */
+.pkg-section {
+  margin-bottom: 32px;
+}
+.pkg-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.pkg-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--sh);
+  border: 1.5px solid var(--g200);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.pkg-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  border-radius: 16px 16px 0 0;
+}
+.pkg-public::before   { background: linear-gradient(90deg, #1a56db, #0ea5e9); }
+.pkg-private::before  { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+.pkg-factory::before  { background: linear-gradient(90deg, #f97316, #f59e0b); }
+
+.pkg-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.pkg-icon-wrap {
+  width: 46px; height: 46px;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.pkg-type { font-size: 10px; font-weight: 700; letter-spacing: .06em; }
+.pkg-name { font-size: 17px; font-weight: 900; color: var(--g900); margin-top: 2px; }
+.pkg-desc { font-size: 11px; color: var(--g400); margin-top: 2px; }
+
+.pkg-metrics {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 18px;
+}
+.metric-box {
+  background: var(--g50);
+  border: 1px solid var(--g200);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+.metric-val {
+  font-size: 20px; font-weight: 900; line-height: 1;
+  margin-bottom: 3px;
+}
+.metric-label { font-size: 9px; color: var(--g400); }
+
+.pkg-data-list {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 16px;
+}
+.data-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--g100);
+}
+.data-row:last-child { border-bottom: none; }
+.data-key { color: var(--g400); }
+.data-val { font-weight: 700; color: var(--g900); }
+
+.pkg-progress-section { }
+.pkg-prog-item {
+  margin-bottom: 10px;
+}
+.pkg-prog-label {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--g600); margin-bottom: 5px;
+}
+.pkg-prog-label span { font-weight: 700; color: var(--g900); }
+
+/* ── 검증 데이터셋 섹션 ──────────────────────────── */
+.dataset-section {
+  margin-bottom: 32px;
+}
+.dataset-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 16px;
+}
+.dataset-main {
+  background: linear-gradient(135deg, #0a1628 0%, #0d2045 100%);
+  border-radius: 16px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.dataset-main::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(26,86,219,.2) 0%, transparent 60%);
+}
+.dataset-main-title {
+  font-size: 14px; font-weight: 900; color: #fff;
+  margin-bottom: 6px; position: relative; z-index: 1;
+}
+.dataset-main-sub {
+  font-size: 11px; color: rgba(255,255,255,.5);
+  margin-bottom: 22px; position: relative; z-index: 1;
+}
+.dataset-stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; position: relative; z-index: 1;
+}
+.dataset-stat {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 14px;
+}
+.dataset-stat-val {
+  font-size: 22px; font-weight: 900; color: #fff; line-height: 1;
+}
+.dataset-stat-val.blue  { color: #60a5fa; }
+.dataset-stat-val.green { color: #34d399; }
+.dataset-stat-val.amber { color: #fbbf24; }
+.dataset-stat-label {
+  font-size: 10px; color: rgba(255,255,255,.4); margin-top: 4px;
+}
+.dataset-timeline {
+  margin-top: 18px; position: relative; z-index: 1;
+}
+.dataset-tl-label {
+  font-size: 10px; color: rgba(255,255,255,.4);
+  margin-bottom: 10px; letter-spacing: .06em; text-transform: uppercase;
+}
+.tl-phases {
+  display: flex; gap: 0;
+}
+.tl-phase {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 10px; font-weight: 700;
+  text-align: center;
+  border-radius: 0;
+  color: rgba(255,255,255,.5);
+  border: 1px solid rgba(255,255,255,.08);
+  border-right: none;
+  background: rgba(255,255,255,.04);
+}
+.tl-phase:first-child { border-radius: 7px 0 0 7px; }
+.tl-phase:last-child  { border-radius: 0 7px 7px 0; border-right: 1px solid rgba(255,255,255,.08); }
+.tl-phase.active {
+  background: rgba(26,86,219,.35);
+  border-color: rgba(26,86,219,.5);
+  color: #93c5fd;
+}
+.tl-phase-date { font-size: 9px; font-weight: 400; color: rgba(255,255,255,.3); margin-top: 2px; }
+
+.dataset-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--sh);
+  border: 1px solid var(--g200);
+  padding: 22px;
+}
+.dataset-card-title {
+  font-size: 13px; font-weight: 900; color: var(--g900);
+  margin-bottom: 4px;
+}
+.dataset-card-sub {
+  font-size: 11px; color: var(--g400);
+  margin-bottom: 18px; line-height: 1.5;
+}
+.check-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.check-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  font-size: 12px; color: var(--g700); line-height: 1.5;
+}
+.check-item.done   { background: #f0fdf4; }
+.check-item.doing  { background: #eff6ff; }
+.check-item.todo   { background: var(--g50); }
+.check-icon { flex-shrink: 0; font-size: 13px; margin-top: 0px; }
+.check-text { flex: 1; }
+.check-phase { font-size: 9px; margin-top: 2px; }
+.check-phase.done-text  { color: #059669; }
+.check-phase.doing-text { color: var(--blue); }
+.check-phase.todo-text  { color: var(--g400); }
+
+/* ── 확산 CTA 섹션 ──────────────────────────── */
+.cta-section {
+  background: linear-gradient(135deg, #0d2045 0%, #1a1048 100%);
+  border-radius: 20px;
+  padding: 40px 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(139,92,246,.15) 0%, transparent 60%);
+}
+.cta-title {
+  font-size: 26px; font-weight: 900; color: #fff;
+  line-height: 1.3; margin-bottom: 12px;
+  position: relative; z-index: 1;
+}
+.cta-title em { color: #a78bfa; font-style: normal; }
+.cta-desc {
+  font-size: 13px; color: rgba(255,255,255,.55);
+  line-height: 1.75;
+  position: relative; z-index: 1;
+}
+.cta-right {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.cta-milestone {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.cta-ms-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.cta-ms-title {
+  font-size: 13px; font-weight: 800; color: #fff;
+  margin-bottom: 2px;
+}
+.cta-ms-desc {
+  font-size: 11px; color: rgba(255,255,255,.45);
+  line-height: 1.4;
+}
+.cta-ms-val {
+  margin-left: auto; flex-shrink: 0;
+  font-size: 20px; font-weight: 900;
+}
+
+/* ── 화살표 플로우 ──────────────────────────── */
+.flow-row {
+  display: flex; align-items: stretch; gap: 0;
+  margin-bottom: 32px;
+}
+.flow-step {
+  flex: 1;
+  background: #fff;
+  border-radius: 0;
+  border: 1px solid var(--g200);
+  border-right: none;
+  padding: 18px 20px;
+  position: relative;
+  box-shadow: var(--sh);
+}
+.flow-step:first-child { border-radius: 14px 0 0 14px; }
+.flow-step:last-child  { border-radius: 0 14px 14px 0; border-right: 1px solid var(--g200); }
+.flow-step::after {
+  content: '›';
+  position: absolute;
+  right: -14px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px; font-weight: 900;
+  color: var(--g400);
+  z-index: 2;
+  background: #fff;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--g200);
+  border-radius: 50%;
+}
+.flow-step:last-child::after { display: none; }
+.flow-step-num {
+  font-size: 10px; font-weight: 700; color: var(--g400);
+  letter-spacing: .08em; margin-bottom: 8px;
+}
+.flow-step-title {
+  font-size: 13px; font-weight: 800; color: var(--g900);
+  margin-bottom: 4px;
+}
+.flow-step-desc {
+  font-size: 11px; color: var(--g600); line-height: 1.5;
+}
+.flow-step-chip {
+  margin-top: 10px;
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 9px; font-weight: 700;
+  background: rgba(26,86,219,.08); color: var(--blue);
+}
+
+/* ── chip ──────────────────────────────────── */
+.chip {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 700;
+}
+.chip-blue   { background: rgba(26,86,219,.08); color: var(--blue); }
+.chip-green  { background: #f0fdf4; color: #059669; }
+.chip-amber  { background: #fffbeb; color: #d97706; }
+.chip-red    { background: #fef2f2; color: #dc2626; }
+.chip-purple { background: #f5f3ff; color: #7c3aed; }
+.chip-gray   { background: var(--g100); color: var(--g600); }
+.chip-teal   { background: #f0f9ff; color: #0369a1; }
+.chip-orange { background: #fff7ed; color: #c2410c; }
+
+/* ── 유틸 ─────────────────────────────────── */
+.mt-8  { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-20 { margin-top: 20px; }
+.gap-8 { gap: 8px; }
+.flex  { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 11px; }
+.font-bold { font-weight: 700; }
+.font-black { font-weight: 900; }
+.text-muted { color: var(--g400); }
+
+</style>
+</head>
+<body>
+
+<!-- ── 상단 탑바 ──────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="logo-mark">UB</div>
+  <span class="logo-text">UnitBuild</span>
+  <span class="logo-sub">모듈러 BIM 자동화 플랫폼</span>
+  <div class="topbar-badge">플랫폼 고도화 로드맵 · 2026</div>
+</div>
+
+<div class="page">
+
+  <!-- ── 히어로 ──────────────────────────────────────────── -->
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span></span> PLATFORM IMPROVEMENT ROADMAP
+    </div>
+    <div class="hero-title">단계별 <em>개선 우선순위</em> 도출 및<br>검증 데이터셋 구축 계획</div>
+    <div class="hero-desc">
+      판단·설계·BIM·구조·제조 로직 보정을 중심으로 공공형/민간형/제조형 패키지별 성능 데이터를 축적하고,
+      향후 유료 도입과 확산을 위한 정량적 검증 기반을 체계적으로 구축합니다.
+    </div>
+    <div class="hero-kpi-row">
+      <div class="hero-kpi">
+        <div class="hero-kpi-val blue">3단계</div>
+        <div class="hero-kpi-label">개선 우선순위 체계</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-val green">5개</div>
+        <div class="hero-kpi-label">로직 보정 영역</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-val amber">3종</div>
+        <div class="hero-kpi-label">패키지 성능 데이터</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-val" style="color:#c4b5fd">96%</div>
+        <div class="hero-kpi-label">목표 BIM 재사용률</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 1: 단계별 개선 우선순위 ────────────────── -->
+  <div class="section-head">
+    <div class="section-head-line" style="background:linear-gradient(180deg,#ef4444,#f97316)"></div>
+    <div class="section-head-title">단계별 개선 우선순위 도출</div>
+    <div class="section-head-sub">3단계 순차 실행 · Impact × Effort 매트릭스 기반</div>
+  </div>
+
+  <div class="priority-grid">
+
+    <!-- P1 긴급 -->
+    <div class="priority-card p1">
+      <div class="priority-num">
+        <span class="badge badge-red">P1 긴급</span>
+        <span style="font-size:10px;color:var(--g400)">즉시 실행</span>
+      </div>
+      <div class="priority-icon icon-red">🔥</div>
+      <div class="priority-title">핵심 로직 오류·누락<br>즉시 보정</div>
+      <div class="priority-desc">
+        현재 운영 중인 판단·BIM·구조 자동화 엔진에서 발생하는
+        오분류, 누락 매핑, 구조 미검증 항목을 즉시 수정합니다.
+      </div>
+      <div class="priority-items">
+        <div class="priority-item">BIM 매핑 오류 247건 중 9건 미연결 해소</div>
+        <div class="priority-item">구조해석 WARN 1건 → PASS 전환</div>
+        <div class="priority-item">사업지 판단 오분류 케이스 패턴 수정</div>
+        <div class="priority-item">OBJ→IFC 변환 누락 요소 재정의</div>
+      </div>
+      <div class="priority-footer">
+        <div class="priority-timeline">목표 완료 <strong>2026 Q2</strong></div>
+        <div class="flex gap-8">
+          <span class="chip chip-red">Impact ★★★</span>
+          <span class="chip chip-gray">Effort ★☆☆</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P2 중기 -->
+    <div class="priority-card p2">
+      <div class="priority-num">
+        <span class="badge badge-amber">P2 중기</span>
+        <span style="font-size:10px;color:var(--g400)">3개월 내</span>
+      </div>
+      <div class="priority-icon icon-amber">⚙️</div>
+      <div class="priority-title">패키지별 성능 데이터<br>축적 체계 구축</div>
+      <div class="priority-desc">
+        공공형·민간형·제조형 3종 패키지의 실사업 적용 결과를
+        자동 수집·분류·정제하는 데이터 파이프라인을 구축합니다.
+      </div>
+      <div class="priority-items">
+        <div class="priority-item">패키지별 KPI 자동 수집 모듈 개발</div>
+        <div class="priority-item">설계→생산→시공 전주기 성능 트래킹</div>
+        <div class="priority-item">BIM 재사용률 18% → 60% 중간 목표 달성</div>
+        <div class="priority-item">이상 데이터 자동 플래깅 및 리뷰 체계</div>
+      </div>
+      <div class="priority-footer">
+        <div class="priority-timeline">목표 완료 <strong>2026 Q3</strong></div>
+        <div class="flex gap-8">
+          <span class="chip chip-amber">Impact ★★★</span>
+          <span class="chip chip-amber">Effort ★★☆</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P3 장기 -->
+    <div class="priority-card p3">
+      <div class="priority-num">
+        <span class="badge badge-purple">P3 장기</span>
+        <span style="font-size:10px;color:var(--g400)">6개월 내</span>
+      </div>
+      <div class="priority-icon icon-purple">🚀</div>
+      <div class="priority-title">유료 도입·확산 위한<br>검증 데이터셋 완성</div>
+      <div class="priority-desc">
+        외부 고객사 유료 도입 제안을 위한 정량 검증 리포트,
+        ROI 시뮬레이터, 사례 기반 벤치마크 데이터셋을 완성합니다.
+      </div>
+      <div class="priority-items">
+        <div class="priority-item">12개 완료 프로젝트 사례 벤치마크 데이터화</div>
+        <div class="priority-item">BIM 생성 시간 4.2초 달성 공식 검증</div>
+        <div class="priority-item">ROI 계산기 및 단가 시뮬레이터 제작</div>
+        <div class="priority-item">외부 감사 가능 검증 리포트 패키징</div>
+      </div>
+      <div class="priority-footer">
+        <div class="priority-timeline">목표 완료 <strong>2026 Q4</strong></div>
+        <div class="flex gap-8">
+          <span class="chip chip-purple">Impact ★★★</span>
+          <span class="chip chip-purple">Effort ★★★</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── 실행 플로우 ────────────────────────────────────── -->
+  <div class="flow-row">
+    <div class="flow-step">
+      <div class="flow-step-num">STEP 01</div>
+      <div class="flow-step-title">현황 진단</div>
+      <div class="flow-step-desc">12개 완료 프로젝트 데이터 분석, 오류 패턴 추출</div>
+      <div class="flow-step-chip">2주 소요</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">STEP 02</div>
+      <div class="flow-step-title">우선순위 매트릭스</div>
+      <div class="flow-step-desc">Impact × Effort 기준 항목별 P1/P2/P3 분류</div>
+      <div class="flow-step-chip">1주 소요</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">STEP 03</div>
+      <div class="flow-step-title">로직 보정 실행</div>
+      <div class="flow-step-desc">판단·설계·BIM·구조·제조 5개 영역 순차 수정</div>
+      <div class="flow-step-chip">8주 소요</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">STEP 04</div>
+      <div class="flow-step-title">데이터 축적</div>
+      <div class="flow-step-desc">패키지별 성능 수집·정제·레이블링 파이프라인 가동</div>
+      <div class="flow-step-chip">지속 운영</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">STEP 05</div>
+      <div class="flow-step-title">검증 완료</div>
+      <div class="flow-step-desc">유료 도입용 검증 리포트 패키징 및 외부 배포</div>
+      <div class="flow-step-chip">2026 Q4</div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2: 판단·설계·BIM·구조·제조 로직 보정 ──── -->
+  <div class="section-head">
+    <div class="section-head-line" style="background:linear-gradient(180deg,#1a56db,#0ea5e9)"></div>
+    <div class="section-head-title">판단·설계·BIM·구조·제조 로직 보정</div>
+    <div class="section-head-sub">5개 엔진 영역 독립 보정 · 상호 연계 검증</div>
+  </div>
+
+  <div class="logic-grid">
+
+    <!-- 판단 -->
+    <div class="logic-card lc-판단">
+      <div class="logic-icon" style="background:rgba(26,86,219,.08)">🧠</div>
+      <div class="logic-title">판단 로직</div>
+      <div class="logic-sub">사업지 적합성·모듈 유형 선택 자동 판단</div>
+      <div class="logic-items">
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--blue)"></div>
+          오분류 패턴 14건 수정
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--blue)"></div>
+          용적률·일조권 재계산 로직
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--blue)"></div>
+          지역별 조건 DB 업데이트
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--blue)"></div>
+          다중 조건 복합 판단 강화
+        </div>
+      </div>
+      <div class="logic-progress mt-12">
+        <div class="logic-progress-label">
+          <span>보정 진행률</span><span style="color:var(--blue);font-weight:700">62%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:62%;background:var(--blue)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 설계 -->
+    <div class="logic-card lc-설계">
+      <div class="logic-icon" style="background:#f0f9ff">📐</div>
+      <div class="logic-title">설계 로직</div>
+      <div class="logic-sub">모듈 배치·평면·입면 자동 생성 엔진</div>
+      <div class="logic-items">
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--teal)"></div>
+          T·L·C형 배치 최적화 알고리즘
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--teal)"></div>
+          세대 면적 오차 ±0.5㎡ 이하
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--teal)"></div>
+          발코니·코어 자동 연결 규칙
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--teal)"></div>
+          피난·소방 기준 자동 검토
+        </div>
+      </div>
+      <div class="logic-progress mt-12">
+        <div class="logic-progress-label">
+          <span>보정 진행률</span><span style="color:var(--teal);font-weight:700">48%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:48%;background:var(--teal)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BIM -->
+    <div class="logic-card lc-bim">
+      <div class="logic-icon" style="background:#f0fdf4">🏗️</div>
+      <div class="logic-title">BIM 로직</div>
+      <div class="logic-sub">OBJ→IFC 변환·매핑·속성 자동화 엔진</div>
+      <div class="logic-items">
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--green)"></div>
+          매핑 미완료 9건 → 0건 목표
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--green)"></div>
+          IFC 4.3 호환성 전환
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--green)"></div>
+          부재 코드 자동 생성 정확도 99%
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--green)"></div>
+          수량 자동산출 오차 ±1% 이하
+        </div>
+      </div>
+      <div class="logic-progress mt-12">
+        <div class="logic-progress-label">
+          <span>보정 진행률</span><span style="color:var(--green);font-weight:700">78%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:78%;background:var(--green)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 구조 -->
+    <div class="logic-card lc-구조">
+      <div class="logic-icon" style="background:#fff7ed">🔩</div>
+      <div class="logic-title">구조 로직</div>
+      <div class="logic-sub">KBC 2019 기준 자동 구조해석·접합부 검토</div>
+      <div class="logic-items">
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--orange)"></div>
+          WARN 항목 자동 보정 피드백
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--orange)"></div>
+          내진 등급별 분기 해석 로직
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--orange)"></div>
+          CLT·H형강 혼합 접합 규칙 추가
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--orange)"></div>
+          해석→설계 자동 반영 루프
+        </div>
+      </div>
+      <div class="logic-progress mt-12">
+        <div class="logic-progress-label">
+          <span>보정 진행률</span><span style="color:var(--orange);font-weight:700">55%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:55%;background:var(--orange)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 제조 -->
+    <div class="logic-card lc-제조">
+      <div class="logic-icon" style="background:#f5f3ff">🏭</div>
+      <div class="logic-title">제조 로직</div>
+      <div class="logic-sub">BOM 자동 구성·생산 스케줄·운반 조건 엔진</div>
+      <div class="logic-items">
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--purple)"></div>
+          BOM 후보안 자동 생성 고도화
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--purple)"></div>
+          병렬 생산 일정 최적화 알고리즘
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--purple)"></div>
+          운반 차량·경로 자동 배정 로직
+        </div>
+        <div class="logic-item">
+          <div class="logic-dot" style="background:var(--purple)"></div>
+          CNC 직출력 데이터 포맷 정합성
+        </div>
+      </div>
+      <div class="logic-progress mt-12">
+        <div class="logic-progress-label">
+          <span>보정 진행률</span><span style="color:var(--purple);font-weight:700">41%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:41%;background:var(--purple)"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── SECTION 3: 패키지별 성능 데이터 축적 ──────────── -->
+  <div class="section-head">
+    <div class="section-head-line" style="background:linear-gradient(180deg,#f97316,#f59e0b)"></div>
+    <div class="section-head-title">공공형 / 민간형 / 제조형 패키지별 성능 데이터 축적</div>
+    <div class="section-head-sub">3종 패키지 전주기 KPI 수집 · 비교 분석 체계</div>
+  </div>
+
+  <div class="pkg-section">
+    <div class="pkg-row">
+
+      <!-- 공공형 -->
+      <div class="pkg-card pkg-public">
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-icon-wrap" style="background:rgba(26,86,219,.08);font-size:22px">🏢</div>
+          </div>
+          <div style="text-align:right">
+            <div class="pkg-type" style="color:var(--blue)">PUBLIC TYPE</div>
+            <div class="pkg-name">공공형</div>
+            <div class="pkg-desc">LH·SH 납품 / 임대·분양 기준</div>
+          </div>
+        </div>
+
+        <div class="pkg-metrics">
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--blue)">2.8억</div>
+            <div class="metric-label">세대당 단가</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--green)">72%</div>
+            <div class="metric-label">표준화율</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--g900)">8건</div>
+            <div class="metric-label">납품 실적</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--teal)">94%</div>
+            <div class="metric-label">BIM 재사용률</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--g600);margin-bottom:8px">축적 대상 데이터</div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">조달청 기준 적합성 <span>92%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:92%;background:var(--blue)"></div></div>
+          </div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">공기 단축률 <span>-38%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:75%;background:var(--teal)"></div></div>
+          </div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">하자 감소율 <span>-61%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:61%;background:var(--green)"></div></div>
+          </div>
+        </div>
+
+        <div class="data-row">
+          <span class="data-key">주요 인증</span>
+          <div style="display:flex;gap:5px">
+            <span class="chip chip-blue" style="font-size:9px">T-15 표준</span>
+            <span class="chip chip-teal" style="font-size:9px">조달청 등록</span>
+          </div>
+        </div>
+        <div class="data-row">
+          <span class="data-key">수집 주기</span>
+          <span class="data-val">프로젝트 완료 후 자동</span>
+        </div>
+        <div class="data-row">
+          <span class="data-key">다음 목표</span>
+          <span class="data-val" style="color:var(--blue)">10건 → 표준화 95%</span>
+        </div>
+      </div>
+
+      <!-- 민간형 -->
+      <div class="pkg-card pkg-private">
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-icon-wrap" style="background:rgba(139,92,246,.08);font-size:22px">🏙️</div>
+          </div>
+          <div style="text-align:right">
+            <div class="pkg-type" style="color:var(--purple)">PRIVATE TYPE</div>
+            <div class="pkg-name">민간형</div>
+            <div class="pkg-desc">분양·프리미엄 / 시공사 협력</div>
+          </div>
+        </div>
+
+        <div class="pkg-metrics">
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--purple)">3.8억+</div>
+            <div class="metric-label">세대당 단가</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--pink)">18%</div>
+            <div class="metric-label">평균 ROI</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--g900)">4건</div>
+            <div class="metric-label">수주 실적</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--amber)">67%</div>
+            <div class="metric-label">커스텀 적용률</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--g600);margin-bottom:8px">축적 대상 데이터</div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">고객 만족도 <span>88점</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:88%;background:var(--purple)"></div></div>
+          </div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">설계 변경 대응 속도 <span>4.2초</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:82%;background:var(--pink)"></div></div>
+          </div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">프리미엄 마감 적용률 <span>73%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:73%;background:var(--amber)"></div></div>
+          </div>
+        </div>
+
+        <div class="data-row">
+          <span class="data-key">주요 인증</span>
+          <div style="display:flex;gap:5px">
+            <span class="chip chip-purple" style="font-size:9px">L-20 / C-30</span>
+            <span class="chip chip-gray" style="font-size:9px">시공사 협력</span>
+          </div>
+        </div>
+        <div class="data-row">
+          <span class="data-key">수집 주기</span>
+          <span class="data-val">입주 후 6개월 추적</span>
+        </div>
+        <div class="data-row">
+          <span class="data-key">다음 목표</span>
+          <span class="data-val" style="color:var(--purple)">ROI 데이터 6건 확보</span>
+        </div>
+      </div>
+
+      <!-- 제조형 -->
+      <div class="pkg-card pkg-factory">
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-icon-wrap" style="background:#fff7ed;font-size:22px">🏭</div>
+          </div>
+          <div style="text-align:right">
+            <div class="pkg-type" style="color:var(--orange)">FACTORY TYPE</div>
+            <div class="pkg-name">제조형</div>
+            <div class="pkg-desc">공장 직출력 / CNC·생산 연계</div>
+          </div>
+        </div>
+
+        <div class="pkg-metrics">
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--orange)">18주</div>
+            <div class="metric-label">표준 생산기간</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--green)">87%</div>
+            <div class="metric-label">공장 표준화율</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--g900)">32개</div>
+            <div class="metric-label">모듈 최대 물량</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--amber)">-23%</div>
+            <div class="metric-label">폐기물 감소율</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--g600);margin-bottom:8px">축적 대상 데이터</div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">공장 가동 효율 <span>84%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:84%;background:var(--orange)"></div></div>
+          </div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">CNC 직출력 성공률 <span>96%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:96%;background:var(--amber)"></div></div>
+          </div>
+          <div class="pkg-prog-item">
+            <div class="pkg-prog-label">생산 오차 기준 이하 <span>99.2%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:99%;background:var(--green)"></div></div>
+          </div>
+        </div>
+
+        <div class="data-row">
+          <span class="data-key">출력 포맷</span>
+          <div style="display:flex;gap:5px">
+            <span class="chip chip-orange" style="font-size:9px">IFC/SAF</span>
+            <span class="chip chip-amber" style="font-size:9px">CNC G-code</span>
+          </div>
+        </div>
+        <div class="data-row">
+          <span class="data-key">수집 주기</span>
+          <span class="data-val">공정 실시간 자동 수집</span>
+        </div>
+        <div class="data-row">
+          <span class="data-key">다음 목표</span>
+          <span class="data-val" style="color:var(--orange)">폐기율 15% → 8% 감소</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SECTION 4: 검증 데이터셋 구축 ────────────────── -->
+  <div class="section-head">
+    <div class="section-head-line" style="background:linear-gradient(180deg,#8b5cf6,#1a56db)"></div>
+    <div class="section-head-title">향후 유료 도입·확산을 위한 검증 데이터셋 구축</div>
+    <div class="section-head-sub">정량 검증 기반 · 외부 고객사 제안 패키지 준비</div>
+  </div>
+
+  <div class="dataset-section">
+    <div class="dataset-grid">
+
+      <!-- 메인: 타임라인 + 통계 -->
+      <div class="dataset-main">
+        <div class="dataset-main-title">검증 데이터셋 현황</div>
+        <div class="dataset-main-sub">12개 완료 프로젝트 기반 · 2022.03 ~ 2026.04</div>
+
+        <div class="dataset-stat-grid">
+          <div class="dataset-stat">
+            <div class="dataset-stat-val blue">12건</div>
+            <div class="dataset-stat-label">완료 프로젝트</div>
+          </div>
+          <div class="dataset-stat">
+            <div class="dataset-stat-val green">4.2초</div>
+            <div class="dataset-stat-label">BIM 생성 시간</div>
+          </div>
+          <div class="dataset-stat">
+            <div class="dataset-stat-val amber">96%</div>
+            <div class="dataset-stat-label">BIM 재사용률</div>
+          </div>
+          <div class="dataset-stat">
+            <div class="dataset-stat-val" style="color:#c4b5fd">-73%</div>
+            <div class="dataset-stat-label">설계 시간 단축</div>
+          </div>
+        </div>
+
+        <div class="dataset-timeline">
+          <div class="dataset-tl-label">구축 단계</div>
+          <div class="tl-phases">
+            <div class="tl-phase active">
+              1단계<br>
+              <div class="tl-phase-date">데이터 수집</div>
+            </div>
+            <div class="tl-phase active">
+              2단계<br>
+              <div class="tl-phase-date">정제·레이블</div>
+            </div>
+            <div class="tl-phase">
+              3단계<br>
+              <div class="tl-phase-date">검증·보고</div>
+            </div>
+            <div class="tl-phase">
+              4단계<br>
+              <div class="tl-phase-date">외부 배포</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;padding:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px">
+          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">핵심 검증 지표</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;font-size:12px">
+              <span style="color:rgba(255,255,255,.6)">설계→BIM 자동화 전환율</span>
+              <span style="color:#60a5fa;font-weight:700">100%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px">
+              <span style="color:rgba(255,255,255,.6)">공장 직출력 성공률</span>
+              <span style="color:#34d399;font-weight:700">96.2%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px">
+              <span style="color:rgba(255,255,255,.6)">구조검토 자동 PASS율</span>
+              <span style="color:#fbbf24;font-weight:700">91.7%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px">
+              <span style="color:rgba(255,255,255,.6)">프로젝트당 평균 절감액</span>
+              <span style="color:#c4b5fd;font-weight:700">2.3억</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 유료 도입 체크리스트 -->
+      <div class="dataset-card">
+        <div class="dataset-card-title">유료 도입 준비 체크리스트</div>
+        <div class="dataset-card-sub">외부 고객사 제안을 위한 필수 항목</div>
+        <div class="check-list">
+          <div class="check-item done">
+            <span class="check-icon">✅</span>
+            <div class="check-text">
+              BIM 자동화 엔진 기본 검증
+              <div class="check-phase done-text">완료 · 12개 프로젝트</div>
+            </div>
+          </div>
+          <div class="check-item done">
+            <span class="check-icon">✅</span>
+            <div class="check-text">
+              공공형 패키지 조달청 기준 충족
+              <div class="check-phase done-text">완료 · T-15 표준 등록</div>
+            </div>
+          </div>
+          <div class="check-item doing">
+            <span class="check-icon">🔄</span>
+            <div class="check-text">
+              5개 로직 영역 오류 보정
+              <div class="check-phase doing-text">진행중 · 평균 57% 완료</div>
+            </div>
+          </div>
+          <div class="check-item doing">
+            <span class="check-icon">🔄</span>
+            <div class="check-text">
+              패키지별 ROI 정량 데이터 확보
+              <div class="check-phase doing-text">진행중 · 공공형 8건 완료</div>
+            </div>
+          </div>
+          <div class="check-item todo">
+            <span class="check-icon">⬜</span>
+            <div class="check-text">
+              외부 감사 가능 검증 리포트 작성
+              <div class="check-phase todo-text">예정 · 2026 Q3</div>
+            </div>
+          </div>
+          <div class="check-item todo">
+            <span class="check-icon">⬜</span>
+            <div class="check-text">
+              ROI 시뮬레이터 & 단가 계산기
+              <div class="check-phase todo-text">예정 · 2026 Q3</div>
+            </div>
+          </div>
+          <div class="check-item todo">
+            <span class="check-icon">⬜</span>
+            <div class="check-text">
+              고객사 맞춤 제안 패키지 완성
+              <div class="check-phase todo-text">예정 · 2026 Q4</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 확산 시나리오 -->
+      <div class="dataset-card">
+        <div class="dataset-card-title">확산 시나리오 &amp; 목표</div>
+        <div class="dataset-card-sub">단계별 유료 도입 및 외부 확산 계획</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+
+          <div style="padding:12px 14px;background:#eff6ff;border:1.5px solid rgba(26,86,219,.2);border-radius:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <span style="font-size:12px;font-weight:800;color:var(--blue)">Phase 1 · 파일럿</span>
+              <span class="chip chip-blue" style="font-size:9px">2026 Q2~Q3</span>
+            </div>
+            <div style="font-size:11px;color:var(--g600);line-height:1.5">
+              검증 데이터 기반 3~5개사 파일럿 제안<br>
+              <strong style="color:var(--g900)">목표 매출 · 1.5억</strong>
+            </div>
+          </div>
+
+          <div style="padding:12px 14px;background:#f5f3ff;border:1.5px solid rgba(139,92,246,.2);border-radius:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <span style="font-size:12px;font-weight:800;color:var(--purple)">Phase 2 · 정식 출시</span>
+              <span class="chip chip-purple" style="font-size:9px">2026 Q4</span>
+            </div>
+            <div style="font-size:11px;color:var(--g600);line-height:1.5">
+              SaaS 구독 모델 + 패키지 라이선스<br>
+              <strong style="color:var(--g900)">목표 매출 · 6억 ARR</strong>
+            </div>
+          </div>
+
+          <div style="padding:12px 14px;background:#fff7ed;border:1.5px solid rgba(249,115,22,.2);border-radius:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <span style="font-size:12px;font-weight:800;color:var(--orange)">Phase 3 · 스케일업</span>
+              <span class="chip chip-orange" style="font-size:9px">2027+</span>
+            </div>
+            <div style="font-size:11px;color:var(--g600);line-height:1.5">
+              공공기관 표준 플랫폼 등재 추진<br>
+              <strong style="color:var(--g900)">목표 매출 · 30억 ARR</strong>
+            </div>
+          </div>
+
+          <div style="margin-top:4px;padding:12px 14px;background:var(--g50);border:1px solid var(--g200);border-radius:10px">
+            <div style="font-size:10px;color:var(--g400);margin-bottom:8px;font-weight:600">목표 고객 유형</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              <span class="chip chip-blue" style="font-size:9px">건설·시행사</span>
+              <span class="chip chip-green" style="font-size:9px">공공기관</span>
+              <span class="chip chip-purple" style="font-size:9px">설계사무소</span>
+              <span class="chip chip-orange" style="font-size:9px">모듈러 공장</span>
+              <span class="chip chip-teal" style="font-size:9px">부동산 디벨로퍼</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 확산 CTA 섹션 ────────────────────────────────── -->
+  <div class="cta-section">
+    <div>
+      <div class="cta-title">검증된 데이터로<br><em>유료 확산을 가속합니다</em></div>
+      <div class="cta-desc">
+        12개 완료 프로젝트에서 축적된 정량 데이터와 5개 로직 영역의 체계적 보정을 통해,
+        UnitBuild는 단순 내부 도구를 넘어 <strong style="color:#fff">외부 고객이 즉시 도입 가능한 검증된 SaaS 플랫폼</strong>으로 진화합니다.
+        공공형·민간형·제조형 패키지 각각의 성능 데이터가 쌓일수록 제안의 설득력은 더욱 강해집니다.
+      </div>
+    </div>
+    <div class="cta-right">
+      <div class="cta-milestone">
+        <div class="cta-ms-icon" style="background:rgba(26,86,219,.2)">⏱️</div>
+        <div>
+          <div class="cta-ms-title">BIM 생성 시간</div>
+          <div class="cta-ms-desc">3일 수작업 → 자동화</div>
+        </div>
+        <div class="cta-ms-val" style="color:#60a5fa">4.2초</div>
+      </div>
+      <div class="cta-milestone">
+        <div class="cta-ms-icon" style="background:rgba(16,185,129,.15)">♻️</div>
+        <div>
+          <div class="cta-ms-title">BIM 재사용률</div>
+          <div class="cta-ms-desc">초기 18% → 12개 프로젝트 후</div>
+        </div>
+        <div class="cta-ms-val" style="color:#34d399">96%</div>
+      </div>
+      <div class="cta-milestone">
+        <div class="cta-ms-icon" style="background:rgba(245,158,11,.15)">💰</div>
+        <div>
+          <div class="cta-ms-title">프로젝트당 절감</div>
+          <div class="cta-ms-desc">설계·BIM·구조 통합 절감</div>
+        </div>
+        <div class="cta-ms-val" style="color:#fbbf24">2.3억</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+</body>
+</html>
